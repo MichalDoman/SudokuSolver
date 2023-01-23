@@ -1,8 +1,11 @@
 from tkinter import *
 
 SIDE = 100
-WIDTH = 9 * SIDE
+MARGIN = 20
+LINE_EXTRA_WIDTH = 2
+WIDTH = 9 * SIDE + 2 * MARGIN + 4 * LINE_EXTRA_WIDTH
 HEIGHT = WIDTH
+
 
 class Board(Frame):
     def __init__(self, master):
@@ -15,22 +18,23 @@ class Board(Frame):
 
     def draw_grid(self):
         for line_nr in range(10):
-            # change color for every 3rd line:
+            # change color and line width for every 3rd line:
             color = 'grey'
             line_width = 1
-            if line_nr % 3 == 0:
+            if (line_nr + 3) % 3 == 0:
                 color = 'black'
-                line_width = 3
+                line_width += LINE_EXTRA_WIDTH
+
             # draw vertical lines:
-            y1 = 0
-            y2 = HEIGHT
-            x = line_nr * SIDE
+            x = MARGIN + line_nr * SIDE
+            y1 = (HEIGHT - MARGIN) + 4 * LINE_EXTRA_WIDTH
+            y2 = MARGIN
             self.canvas.create_line(x, y1, x, y2, fill=color, width=line_width)
 
             # draw horizontal lines:
-            x1 = 0
-            x2 = WIDTH
-            y = line_nr * SIDE
+            x1 = MARGIN
+            x2 = WIDTH - MARGIN + 4 * LINE_EXTRA_WIDTH
+            y = HEIGHT - MARGIN - line_nr * SIDE
             self.canvas.create_line(x1, y, x2, y, fill=color, width=line_width)
 
 
