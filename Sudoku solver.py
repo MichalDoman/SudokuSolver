@@ -1,9 +1,8 @@
 from tkinter import *
 
 SIDE = 100
-MARGIN = 20
-LINE_EXTRA_WIDTH = 2
-WIDTH = 9 * SIDE + 2 * MARGIN + 4 * LINE_EXTRA_WIDTH
+MARGIN = 50
+WIDTH = 9 * SIDE + 2 * MARGIN
 HEIGHT = WIDTH
 
 
@@ -23,17 +22,17 @@ class Board(Frame):
             line_width = 1
             if (line_nr + 3) % 3 == 0:
                 color = 'black'
-                line_width += LINE_EXTRA_WIDTH
+                line_width = 3
 
             # draw vertical lines:
             x = MARGIN + line_nr * SIDE
-            y1 = (HEIGHT - MARGIN) + 4 * LINE_EXTRA_WIDTH
+            y1 = (HEIGHT - MARGIN)
             y2 = MARGIN
             self.canvas.create_line(x, y1, x, y2, fill=color, width=line_width)
 
             # draw horizontal lines:
             x1 = MARGIN
-            x2 = WIDTH - MARGIN + 4 * LINE_EXTRA_WIDTH
+            x2 = WIDTH - MARGIN
             y = HEIGHT - MARGIN - line_nr * SIDE
             self.canvas.create_line(x1, y, x2, y, fill=color, width=line_width)
 
