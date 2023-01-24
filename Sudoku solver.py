@@ -16,10 +16,9 @@ class Board(Frame):
         self.draw_grid()
         self.cells = []
         self.create_cells()
-        self.cells[0][0].highlight()
 
-        self.canvas.bind("<Button-1>", self._choose_cell)
-        self.canvas.bind("<Key>", self._choose_digit)
+        self.canvas.bind("<Button-1>", self.choose_cell)
+        self.canvas.bind("<Key>", self.choose_digit)
 
     def draw_grid(self):
         for line_nr in range(10):
@@ -56,14 +55,20 @@ class Board(Frame):
 
             self.cells.append(row)
 
+    def choose_cell(self, click_coord):
+        x = click_coord.x
+        y = click_coord.y
 
-    def _choose_cell(self, coord):
+        for cell in self.cells:
+            for col_nr in range(9):
+                if cell[col_nr].x1 <= x <= cell[col_nr].x2 and cell[col_nr].y1 <= y <= cell[col_nr].y2:
+                    cell[col_nr].highlight()
+                    break
+
+    def create_text_fields(self, row, col, digit):
         pass
 
-    def _create_text_fields(self, row, col, digit):
-        pass
-
-    def _choose_digit(self, event):
+    def choose_digit(self, event):
         pass
 
 
@@ -77,12 +82,17 @@ class Cell:
 
     def highlight(self):
         self.canvas.delete('highlight')
-        self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, tags='highlight', outline='green', width=5)
+        self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, tags='highlight', outline='green', width=7)
+
+    def show_digit(self, digit):
+        x = self.x1 + SIDE / 2
+        y = self.y1 + SIDE / 2
+        self.canvas.create_text(x, y, text=str(digit), tags='digit', font=('Script', 15, 'bold'))
 
 
 root = Tk()
 root.title("Sudoku Solver")
-root.geometry(f'{WIDTH}x{HEIGHT}')
+root.geometry(f'{int(WIDTH * 1)}x{HEIGHT}')
 app = Board(root)
 
 root.mainloop()
