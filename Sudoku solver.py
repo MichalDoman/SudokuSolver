@@ -16,9 +16,11 @@ class Board(Frame):
         self.draw_grid()
         self.cells = []
         self.create_cells()
+        self.current_cell = None
 
         self.canvas.bind("<Button-1>", self.choose_cell)
-        self.canvas.bind("<Key>", self.choose_digit)
+        self.bind("<Key>", self.choose_digit)
+
 
     def draw_grid(self):
         for line_nr in range(10):
@@ -59,21 +61,29 @@ class Board(Frame):
         x = click_coord.x
         y = click_coord.y
 
-        for cell in self.cells:
-            for col_nr in range(9):
-                if cell[col_nr].x1 <= x <= cell[col_nr].x2 and cell[col_nr].y1 <= y <= cell[col_nr].y2:
-                    cell[col_nr].highlight()
+        for row in self.cells:
+            for col in range(9):
+                cell = row[col]
+                if cell.x1 <= x <= cell.x2 and cell.y1 <= y <= cell.y2:
+                    cell.highlight()
+                    self.current_cell = cell
                     break
 
-    def create_text_fields(self, row, col, digit):
-        pass
+    @staticmethod
+    def choose_digit(event):
+        print(event.keysym)
+        # if self.current_cell:
+        #     # if key.char in "123456789":
+        #     print(self.current_cell)
+        #     print(key.char)
+        #     self.current_cell.show_digit(int(key.char))
 
-    def choose_digit(self, event):
+    def reset_board(self):
         pass
-
 
 class Cell:
     def __init__(self, board, x1, y1, x2, y2):
+        self.value = None
         self.canvas = board
         self.x1 = x1
         self.y1 = y1
@@ -87,12 +97,14 @@ class Cell:
     def show_digit(self, digit):
         x = self.x1 + SIDE / 2
         y = self.y1 + SIDE / 2
+        self.value = digit
         self.canvas.create_text(x, y, text=str(digit), tags='digit', font=('Script', 15, 'bold'))
 
 
 root = Tk()
 root.title("Sudoku Solver")
 root.geometry(f'{int(WIDTH * 1)}x{HEIGHT}')
+
 app = Board(root)
 
 root.mainloop()
