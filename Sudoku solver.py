@@ -18,9 +18,9 @@ class Board(Frame):
         self.create_cells()
         self.current_cell = None
 
+        self.canvas.focus_set()
         self.canvas.bind("<Button-1>", self.choose_cell)
-        self.bind("<Key>", self.choose_digit)
-
+        self.canvas.bind("<Key>", self.choose_digit)
 
     def draw_grid(self):
         for line_nr in range(10):
@@ -69,17 +69,15 @@ class Board(Frame):
                     self.current_cell = cell
                     break
 
-    @staticmethod
-    def choose_digit(event):
-        print(event.keysym)
-        # if self.current_cell:
-        #     # if key.char in "123456789":
-        #     print(self.current_cell)
-        #     print(key.char)
-        #     self.current_cell.show_digit(int(key.char))
+    def choose_digit(self, key_press):
+        if self.current_cell:
+            key_char = key_press.char
+            if key_char.isdigit() and int(key_char) != 0:
+                self.current_cell.show_digit(int(key_press.char))
 
     def reset_board(self):
         pass
+
 
 class Cell:
     def __init__(self, board, x1, y1, x2, y2):
@@ -89,16 +87,19 @@ class Cell:
         self.y1 = y1
         self.x2 = x2
         self.y2 = y2
+        self.unique_tag = f'cell{self.x1}{self.y1}' # Cannot be digit-only
+
 
     def highlight(self):
         self.canvas.delete('highlight')
         self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, tags='highlight', outline='green', width=7)
 
     def show_digit(self, digit):
+        self.canvas.delete(self.unique_tag)
         x = self.x1 + SIDE / 2
         y = self.y1 + SIDE / 2
         self.value = digit
-        self.canvas.create_text(x, y, text=str(digit), tags='digit', font=('Script', 15, 'bold'))
+        self.canvas.create_text(x, y, text=str(digit), tags=self.unique_tag, font=('Script', 15, 'bold'))
 
 
 root = Tk()
