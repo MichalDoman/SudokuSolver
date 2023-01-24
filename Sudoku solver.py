@@ -21,6 +21,10 @@ class Board(Frame):
         self.canvas.focus_set()
         self.canvas.bind("<Button-1>", self.choose_cell)
         self.canvas.bind("<Key>", self.choose_digit)
+        self.canvas.bind("<Up>", self.switch_cells_with_arrows)
+        self.canvas.bind("<Down>", self.switch_cells_with_arrows)
+        self.canvas.bind("<Left>", self.switch_cells_with_arrows)
+        self.canvas.bind("<Right>", self.switch_cells_with_arrows)
 
     def draw_grid(self):
         for line_nr in range(10):
@@ -52,7 +56,8 @@ class Board(Frame):
                 y1 = MARGIN + col_nr * SIDE
                 x2 = x1 + SIDE
                 y2 = y1 + SIDE
-                cell = Cell(self.canvas, x1, y1, x2, y2)
+                list_coord = (row_nr, col_nr)  # Used for moving with arrows
+                cell = Cell(self.canvas, list_coord, x1, y1, x2, y2)
                 row.append(cell)
 
             self.cells.append(row)
@@ -75,20 +80,44 @@ class Board(Frame):
             if key_char.isdigit() and int(key_char) != 0:
                 self.current_cell.show_digit(int(key_press.char))
 
+    def switch_cells_with_arrows(self, arrow_press):
+        arrow = arrow_press.keysym
+
+        if arrow == 'Right':
+            list_row = self.current_cell.list_coord[0]
+            list_col = self.current_cell.list_coord[1] + 1
+
+        elif arrow == 'Left':
+            list_row = self.current_cell.list_coord[0]
+            list_col = self.current_cell.list_coord[1] - 1
+
+        elif arrow == 'Up':
+            list_row = self.current_cell.list_coord[0] - 1
+            list_col = self.current_cell.list_coord[1]
+
+        else:
+            list_row = self.current_cell.list_coord[0] + 1
+            list_col = self.current_cell.list_coord[1]
+
+        print(f'({list_row}, {list_col})')
+        new_current_cell = self.cells[list_row][list_col]
+        new_current_cell.highlight()
+        self.current_cell = new_current_cell
+
     def reset_board(self):
         pass
 
 
 class Cell:
-    def __init__(self, board, x1, y1, x2, y2):
+    def __init__(self, board, list_coord, x1, y1, x2, y2):
         self.value = None
+        self.list_coord = list_coord
         self.canvas = board
         self.x1 = x1
         self.y1 = y1
         self.x2 = x2
         self.y2 = y2
-        self.unique_tag = f'cell{self.x1}{self.y1}' # Cannot be digit-only
-
+        self.unique_tag = f'cell{self.x1}{self.y1}'  # Cannot be digit-only
 
     def highlight(self):
         self.canvas.delete('highlight')
