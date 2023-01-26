@@ -16,13 +16,13 @@ class Board(Frame):
 
         self.reset_button = Button(self, text='Reset', width=24, bd=3, bg='OrangeRed3', fg='white',
                                    activebackground='OrangeRed4', activeforeground='white', font=('Script', 10, 'bold'),
-                                   relief="flat", command='')
-        self.reset_button.pack(side=LEFT)
+                                   relief="flat", command=self.reset_board)
+        self.reset_button.pack(fill=X, expand=True ,side=LEFT)
 
         self.solve_button = Button(self, text='Solve', width=24, bd=3, bg='chartreuse4', fg='white',
                                    activebackground='dark green', activeforeground='white', font=('Script', 10, 'bold'),
                                    relief="flat", command='')
-        self.solve_button.pack(side=RIGHT)
+        self.solve_button.pack(fill=X, expand=True, side=RIGHT)
 
         # Create cells and organise them:
         self.draw_grid()
@@ -39,6 +39,8 @@ class Board(Frame):
         self.canvas.bind("<Down>", self.switch_cells_with_arrows)
         self.canvas.bind("<Left>", self.switch_cells_with_arrows)
         self.canvas.bind("<Right>", self.switch_cells_with_arrows)
+        self.canvas.bind("<space>", lambda key_press: self.delete_digit())
+        self.canvas.bind("<BackSpace>", lambda key_press: self.delete_digit())
 
     def draw_grid(self):
         for line_nr in range(10):
@@ -94,6 +96,9 @@ class Board(Frame):
             if key_char.isdigit() and int(key_char) != 0:
                 self.current_cell.show_digit(int(key_press.char))
 
+    def delete_digit(self):
+        self.canvas.delete(self.current_cell.unique_tag)
+
     def switch_cells_with_arrows(self, arrow_press):
         arrow = arrow_press.keysym
 
@@ -128,7 +133,9 @@ class Board(Frame):
         self.current_cell = new_current_cell
 
     def reset_board(self):
-        pass
+        for row in self.cells:
+            for cell in row:
+                self.canvas.delete(cell.unique_tag)
 
 
 class Cell:
