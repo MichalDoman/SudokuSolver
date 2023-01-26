@@ -14,13 +14,13 @@ class Board(Frame):
         self.canvas = Canvas(self, width=WIDTH, height=HEIGHT)
         self.canvas.pack(side=BOTTOM)
 
-        self.reset_button = Button(self, text='Reset', width=28, bd=3, bg='OrangeRed3', fg='white',
-                                   activebackground='OrangeRed4', activeforeground='white', font=('Script', 10),
+        self.reset_button = Button(self, text='Reset', width=24, bd=3, bg='OrangeRed3', fg='white',
+                                   activebackground='OrangeRed4', activeforeground='white', font=('Script', 10, 'bold'),
                                    relief="flat", command='')
         self.reset_button.pack(side=LEFT)
 
-        self.solve_button = Button(self, text='Solve', width=28, bd=3, bg='chartreuse3', fg='white',
-                                   activebackground='chartreuse4', activeforeground='white', font=('Script', 10),
+        self.solve_button = Button(self, text='Solve', width=24, bd=3, bg='chartreuse4', fg='white',
+                                   activebackground='dark green', activeforeground='white', font=('Script', 10, 'bold'),
                                    relief="flat", command='')
         self.solve_button.pack(side=RIGHT)
 
@@ -135,7 +135,7 @@ class Cell:
 
     def highlight(self):
         self.canvas.delete('highlight')
-        self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, tags='highlight', outline='turquoise4', width=7)
+        self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, tags='highlight', outline='RoyalBlue2', width=7)
 
     def show_digit(self, digit):
         self.canvas.delete(self.unique_tag)
