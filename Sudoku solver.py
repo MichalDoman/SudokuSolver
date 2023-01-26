@@ -28,7 +28,7 @@ class Board(Frame):
         self.draw_grid()
         self.cells = []
         self.create_cells()
-        self.current_cell = self.cells[0][0]
+        self.current_cell = self.cells[4][4]
         self.current_cell.highlight()
 
         # Bind necessary keys:
@@ -62,15 +62,15 @@ class Board(Frame):
             self.canvas.create_line(x1, y, x2, y, fill=color, width=line_width)
 
     def create_cells(self):
-        for col_nr in range(9):
+        for row_nr in range(9):
             row = []
 
-            for row_nr in range(9):
-                x1 = MARGIN + row_nr * SIDE
-                y1 = MARGIN + col_nr * SIDE
+            for col_nr in range(9):
+                x1 = MARGIN + col_nr * SIDE
+                y1 = MARGIN + row_nr * SIDE
                 x2 = x1 + SIDE
                 y2 = y1 + SIDE
-                list_coord = (row_nr, col_nr)  # Used for moving with arrows
+                list_coord = (row_nr, col_nr) # Used for moving with arrows
                 cell = Cell(self.canvas, list_coord, x1, y1, x2, y2)
                 row.append(cell)
 
@@ -113,7 +113,16 @@ class Board(Frame):
             list_row = self.current_cell.list_coord[0] + 1
             list_col = self.current_cell.list_coord[1]
 
-        print(f'({list_row}, {list_col})')
+        if list_row < 0:
+            list_row = 8
+        elif list_row > 8:
+            list_row = 0
+
+        if list_col < 0:
+            list_col = 8
+        elif list_col > 8:
+            list_col = 0
+
         new_current_cell = self.cells[list_row][list_col]
         new_current_cell.highlight()
         self.current_cell = new_current_cell
@@ -135,7 +144,8 @@ class Cell:
 
     def highlight(self):
         self.canvas.delete('highlight')
-        self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, tags='highlight', outline='RoyalBlue2', width=7)
+        self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, tags='highlight', outline='RoyalBlue2',
+                                     width=7)
 
     def show_digit(self, digit):
         self.canvas.delete(self.unique_tag)
