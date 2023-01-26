@@ -9,15 +9,29 @@ HEIGHT = WIDTH
 class Board(Frame):
     def __init__(self, master):
         super().__init__(master)
+        # Prepare canvas and buttons:
         self.pack(fill=BOTH)
         self.canvas = Canvas(self, width=WIDTH, height=HEIGHT)
-        self.canvas.pack(fill=BOTH, side=TOP)
+        self.canvas.pack(side=BOTTOM)
 
+        self.reset_button = Button(self, text='Reset', width=28, bd=3, bg='OrangeRed3', fg='white',
+                                   activebackground='OrangeRed4', activeforeground='white', font=('Script', 10),
+                                   relief="flat", command='')
+        self.reset_button.pack(side=LEFT)
+
+        self.solve_button = Button(self, text='Solve', width=28, bd=3, bg='chartreuse3', fg='white',
+                                   activebackground='chartreuse4', activeforeground='white', font=('Script', 10),
+                                   relief="flat", command='')
+        self.solve_button.pack(side=RIGHT)
+
+        # Create cells and organise them:
         self.draw_grid()
         self.cells = []
         self.create_cells()
-        self.current_cell = None
+        self.current_cell = self.cells[0][0]
+        self.current_cell.highlight()
 
+        # Bind necessary keys:
         self.canvas.focus_set()
         self.canvas.bind("<Button-1>", self.choose_cell)
         self.canvas.bind("<Key>", self.choose_digit)
@@ -121,7 +135,7 @@ class Cell:
 
     def highlight(self):
         self.canvas.delete('highlight')
-        self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, tags='highlight', outline='green', width=7)
+        self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, tags='highlight', outline='turquoise4', width=7)
 
     def show_digit(self, digit):
         self.canvas.delete(self.unique_tag)
@@ -133,7 +147,7 @@ class Cell:
 
 root = Tk()
 root.title("Sudoku Solver")
-root.geometry(f'{int(WIDTH * 1)}x{HEIGHT}')
+root.geometry(f'{int(WIDTH * 1)}x{int(HEIGHT * 1.05)}')
 
 app = Board(root)
 
