@@ -6,6 +6,37 @@ WIDTH = 9 * SIDE + 2 * MARGIN
 HEIGHT = WIDTH
 
 
+class SudokuSolver:
+    def __init__(self, sudoku_board_cells):
+        self.cells = sudoku_board_cells
+        self.squares = []
+        self.create_squares(self.cells)
+
+    def create_squares(self, cells):
+        # Create nine empty lists:
+        for square in range(9):
+            self.squares.append([])
+
+        # Create 3 empty lists in every list created above:
+        for square in self.squares:
+            for row in range(3):
+                square.append([])
+
+        # Add cells:
+        for row in range(1, 4):
+            for col in range(3):
+                self.squares[row * 3][col] = self.cells[row * 3][col]
+
+
+    def check_square(self, cell):
+        pass
+
+    def check_row(self, cell, cells):
+        for other_cell in cells[cell.list_coord[0]]:
+            if other_cell:
+                cell.possible_values.remove(other_cell.value)
+
+
 class Board(Frame):
     def __init__(self, master):
         super().__init__(master)
@@ -17,12 +48,12 @@ class Board(Frame):
         self.reset_button = Button(self, text='Reset', width=24, bd=3, bg='OrangeRed3', fg='white',
                                    activebackground='OrangeRed4', activeforeground='white', font=('Script', 10, 'bold'),
                                    relief="flat", command=self.reset_board)
-        self.reset_button.pack(fill=X, expand=True ,side=LEFT)
+        self.reset_button.pack(fill=BOTH, expand=True, side=LEFT)
 
         self.solve_button = Button(self, text='Solve', width=24, bd=3, bg='chartreuse4', fg='white',
                                    activebackground='dark green', activeforeground='white', font=('Script', 10, 'bold'),
-                                   relief="flat", command='')
-        self.solve_button.pack(fill=X, expand=True, side=RIGHT)
+                                   relief="flat", command=self.solve)
+        self.solve_button.pack(fill=BOTH, expand=True, side=RIGHT)
 
         # Create cells and organise them:
         self.draw_grid()
@@ -72,7 +103,7 @@ class Board(Frame):
                 y1 = MARGIN + row_nr * SIDE
                 x2 = x1 + SIDE
                 y2 = y1 + SIDE
-                list_coord = (row_nr, col_nr) # Used for moving with arrows
+                list_coord = (row_nr, col_nr)  # Used for moving with arrows
                 cell = Cell(self.canvas, list_coord, x1, y1, x2, y2)
                 row.append(cell)
 
@@ -94,7 +125,7 @@ class Board(Frame):
         if self.current_cell:
             key_char = key_press.char
             if key_char.isdigit() and int(key_char) != 0:
-                self.current_cell.show_digit(int(key_press.char))
+                self.current_cell.show_digit(int(key_press.char), 'black')
 
     def delete_digit(self):
         self.canvas.delete(self.current_cell.unique_tag)
@@ -132,6 +163,9 @@ class Board(Frame):
         new_current_cell.highlight()
         self.current_cell = new_current_cell
 
+    def solve(self):
+        solver = SudokuSolver(self.cells)
+
     def reset_board(self):
         for row in self.cells:
             for cell in row:
@@ -141,6 +175,7 @@ class Board(Frame):
 class Cell:
     def __init__(self, board, list_coord, x1, y1, x2, y2):
         self.value = None
+        self.possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.list_coord = list_coord
         self.canvas = board
         self.x1 = x1
@@ -154,12 +189,12 @@ class Cell:
         self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, tags='highlight', outline='RoyalBlue2',
                                      width=7)
 
-    def show_digit(self, digit):
+    def show_digit(self, digit, color):
         self.canvas.delete(self.unique_tag)
         x = self.x1 + SIDE / 2
         y = self.y1 + SIDE / 2
         self.value = digit
-        self.canvas.create_text(x, y, text=str(digit), tags=self.unique_tag, font=('Script', 15, 'bold'))
+        self.canvas.create_text(x, y, text=str(digit), tags=self.unique_tag, fill=color, font=('Script', 15, 'bold'))
 
 
 root = Tk()
