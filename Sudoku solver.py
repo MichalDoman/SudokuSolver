@@ -7,34 +7,50 @@ HEIGHT = WIDTH
 
 
 class SudokuSolver:
-    def __init__(self, sudoku_board_cells):
-        self.cells = sudoku_board_cells
-        self.squares = []
-        self.create_squares(self.cells)
+    def __init__(self, board_cells, board_squares):
+        self.cells = board_cells
+        self.squares = board_squares
+        self.check_square()
 
-    def create_squares(self, cells):
-        # Create nine empty lists:
-        for square in range(9):
-            self.squares.append([])
+    def check_row(self):
+        for cells_in_row in self.cells:
+            values = []
+            for cell in cells_in_row:
+                if cell.value:
+                    values.append(cell.value)
+            self.update_cells(values, cells_in_row)
 
-        # Create 3 empty lists in every list created above:
+    def check_column(self):
+        for col_nr in range(0, 9):
+            cells_in_column = []
+            values = []
+            for row in self.cells:
+                cell = row[col_nr]
+                cells_in_column.append(cell)
+                if cell.value:
+                    values.append(cell.value)
+            self.update_cells(values, cells_in_column)
+
+
+    def check_square(self):
         for square in self.squares:
-            for row in range(3):
-                square.append([])
+            values = []
+            for cell in square:
+                if cell.value:
+                    values.append(cell.value)
+            self.update_cells(values, square)
 
-        # Add cells:
-        for row in range(1, 4):
-            for col in range(3):
-                self.squares[row * 3][col] = self.cells[row * 3][col]
+    @staticmethod
+    def update_cells(values, influence_cells):
+        for cell in influence_cells:
+            for value in values:
+                if not cell.value:
+                    if value in cell.possible_values:
+                        cell.possible_values.remove(value)
 
-
-    def check_square(self, cell):
-        pass
-
-    def check_row(self, cell, cells):
-        for other_cell in cells[cell.list_coord[0]]:
-            if other_cell:
-                cell.possible_values.remove(other_cell.value)
+            if len(cell.possible_values) == 1 and not cell.value:
+                value = cell.possible_values[0]
+                cell.show_digit(value, 'slate grey')
 
 
 class Board(Frame):
@@ -61,6 +77,8 @@ class Board(Frame):
         self.create_cells()
         self.current_cell = self.cells[4][4]
         self.current_cell.highlight()
+        self.squares = []
+        self.create_squares(self.cells)
 
         # Bind necessary keys:
         self.canvas.focus_set()
@@ -73,6 +91,7 @@ class Board(Frame):
         self.canvas.bind("<space>", lambda key_press: self.delete_digit())
         self.canvas.bind("<BackSpace>", lambda key_press: self.delete_digit())
 
+        self.is_solved = False
     def draw_grid(self):
         for line_nr in range(10):
             # change color and line width for every 3rd line:
@@ -109,6 +128,18 @@ class Board(Frame):
 
             self.cells.append(row)
 
+    def create_squares(self, cells):
+        for square_x in range(0, 9, 3):  # for 0, 3 and 6
+            for square_y in range(0, 9, 3):
+                square = []
+                for row in range(square_x, square_x + 3):  # (0, 3), (3, 6) and (6, 9)
+                    for col in range(square_y, square_y + 3):
+                        cell = cells[row][col]
+                        square.append(cell)
+                self.squares.append(square)
+                for cell in square:
+                    cell.square_id = self.squares.index(square)
+
     def choose_cell(self, click_coord):
         x = click_coord.x
         y = click_coord.y
@@ -122,13 +153,15 @@ class Board(Frame):
                     break
 
     def choose_digit(self, key_press):
-        if self.current_cell:
-            key_char = key_press.char
-            if key_char.isdigit() and int(key_char) != 0:
-                self.current_cell.show_digit(int(key_press.char), 'black')
+        if not self.is_solved:
+            if self.current_cell:
+                key_char = key_press.char
+                if key_char.isdigit() and int(key_char) != 0:
+                    self.current_cell.show_digit(int(key_press.char), 'black')
 
     def delete_digit(self):
-        self.canvas.delete(self.current_cell.unique_tag)
+        if not self.is_solved:
+            self.canvas.delete(self.current_cell.unique_tag)
 
     def switch_cells_with_arrows(self, arrow_press):
         arrow = arrow_press.keysym
@@ -164,12 +197,17 @@ class Board(Frame):
         self.current_cell = new_current_cell
 
     def solve(self):
-        solver = SudokuSolver(self.cells)
+        self.is_solved = True
+        solver = SudokuSolver(self.cells, self.squares)
+
 
     def reset_board(self):
+        self.is_solved = False
         for row in self.cells:
             for cell in row:
                 self.canvas.delete(cell.unique_tag)
+                cell.value = None
+                cell.possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
 class Cell:
@@ -177,6 +215,7 @@ class Cell:
         self.value = None
         self.possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.list_coord = list_coord
+        self.square_id = None  # gets assigned when squares are created in Solver
         self.canvas = board
         self.x1 = x1
         self.y1 = y1
