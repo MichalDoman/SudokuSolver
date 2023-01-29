@@ -10,7 +10,20 @@ class SudokuSolver:
     def __init__(self, board_cells, board_squares):
         self.cells = board_cells
         self.squares = board_squares
-        self.check_square()
+        self.solve()
+    def solve(self):
+        while not self.check_if_solved():
+            self.check_row()
+            self.check_column()
+            self.check_square()
+        print('Sudoku solved!')
+
+    def check_if_solved(self):
+        for row in self.cells:
+            for cell in row:
+                if not cell.value:
+                    return False
+        return True
 
     def check_row(self):
         for cells_in_row in self.cells:
@@ -30,7 +43,6 @@ class SudokuSolver:
                 if cell.value:
                     values.append(cell.value)
             self.update_cells(values, cells_in_column)
-
 
     def check_square(self):
         for square in self.squares:
@@ -92,6 +104,7 @@ class Board(Frame):
         self.canvas.bind("<BackSpace>", lambda key_press: self.delete_digit())
 
         self.is_solved = False
+
     def draw_grid(self):
         for line_nr in range(10):
             # change color and line width for every 3rd line:
@@ -137,8 +150,6 @@ class Board(Frame):
                         cell = cells[row][col]
                         square.append(cell)
                 self.squares.append(square)
-                for cell in square:
-                    cell.square_id = self.squares.index(square)
 
     def choose_cell(self, click_coord):
         x = click_coord.x
@@ -200,7 +211,6 @@ class Board(Frame):
         self.is_solved = True
         solver = SudokuSolver(self.cells, self.squares)
 
-
     def reset_board(self):
         self.is_solved = False
         for row in self.cells:
@@ -215,7 +225,6 @@ class Cell:
         self.value = None
         self.possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.list_coord = list_coord
-        self.square_id = None  # gets assigned when squares are created in Solver
         self.canvas = board
         self.x1 = x1
         self.y1 = y1
