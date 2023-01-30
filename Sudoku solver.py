@@ -101,7 +101,7 @@ class SudokuSolver:
 class Board(Frame):
     def __init__(self, master):
         super().__init__(master)
-        # Prepare canvas and buttons:
+        # Prepare canvas and widgets:
         self.pack(fill=BOTH)
         self.canvas = Canvas(self, width=WIDTH, height=HEIGHT)
         self.canvas.pack(side=RIGHT)
@@ -127,6 +127,14 @@ class Board(Frame):
                                    relief="flat", command=self.reset_board)
         self.reset_button.pack(fill=BOTH, expand=True, side=TOP)
 
+        self.auto_cell_switch = IntVar()
+        self.checkbox = Checkbutton(self, text='Auto Cell Switch: ON', relief='flat', variable=self.auto_cell_switch,
+                                    bd=0, pady=20, bg='dim grey',
+                                    fg='white', activebackground='dim grey', activeforeground='white',
+                                    selectcolor='dim grey', font=('Script', 8, 'bold'), indicatoron=False,
+                                    justify=CENTER, command=self.auto_switch)
+        self.checkbox.pack(fill=BOTH)
+
         # Create cells and organise them:
         self.draw_grid()
         self.cells = []
@@ -148,7 +156,6 @@ class Board(Frame):
         self.canvas.bind("<BackSpace>", lambda key_press: self.delete_digit())
 
         # Miscellaneous:
-        self.sudoku = []  # A puzzle ready to be solved, used to clear the solved numbers
         self.is_solved = False
 
     def draw_grid(self):
@@ -215,6 +222,12 @@ class Board(Frame):
                 key_char = key_press.char
                 if key_char.isdigit() and int(key_char) != 0:
                     self.current_cell.show_digit(int(key_press.char), 'black')
+
+    def auto_switch(self):
+        if self.auto_cell_switch.get():
+            self.checkbox['text'] = 'Auto Cell Switch: OFF'
+        else:
+            self.checkbox['text'] = 'Auto Cell Switch: ON'
 
     def delete_digit(self):
         if not self.is_solved:
@@ -311,7 +324,7 @@ class Cell:
 
 root = Tk()
 root.title("Sudoku Solver")
-root.geometry(f'{int(WIDTH * 1.2)}x{HEIGHT}')
+root.geometry(f'{int(WIDTH * 1.3)}x{HEIGHT}')
 
 app = Board(root)
 
