@@ -45,12 +45,11 @@ class SudokuSolver:
                         values.append(cell.value)
 
     def solve(self):
-        self.check_row()
-        # while not self.check_if_solved():
-        #     self.check_row()
-        #     self.check_column()
-        #     self.check_square()
-        # print('Sudoku solved!')
+        while not self.check_if_solved():
+            self.check_row()
+            self.check_column()
+            self.check_square()
+        print('Sudoku solved!')
 
     def check_if_solved(self):
         for row in self.cells:
@@ -256,7 +255,6 @@ class Board(Frame):
         self.current_cell = new_current_cell
 
     def solve(self):
-        self.sudoku = self.cells
         try:
             solver = SudokuSolver(self.cells, self.squares)
             solver.solve()
@@ -269,23 +267,16 @@ class Board(Frame):
         pass
 
     def clear_board(self):
-        self.is_solved = False
-        for row in self.sudoku:
+        for row in self.cells:
             for cell in row:
-                print(cell.value, cell.possible_values)
-                if not cell.value:
-                    self.canvas.delete(cell.unique_tag)
-                    cell.value = None
-                    cell.possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        self.cells = self.sudoku
+                if len(cell.possible_values) == 1:
+                    cell.reset()
 
     def reset_board(self):
         self.is_solved = False
         for row in self.cells:
             for cell in row:
-                self.canvas.delete(cell.unique_tag)
-                cell.value = None
-                cell.possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+                cell.reset()
 
 
 class Cell:
@@ -311,6 +302,11 @@ class Cell:
         y = self.y1 + SIDE / 2
         self.value = digit
         self.canvas.create_text(x, y, text=str(digit), tags=self.unique_tag, fill=color, font=('Script', 15, 'bold'))
+
+    def reset(self):
+        self.value = None
+        self.possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        self.canvas.delete(self.unique_tag)
 
 
 root = Tk()
