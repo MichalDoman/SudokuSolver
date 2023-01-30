@@ -10,13 +10,47 @@ class SudokuSolver:
     def __init__(self, board_cells, board_squares):
         self.cells = board_cells
         self.squares = board_squares
-        self.solve()
+        self.check_board_validity()
+
+    def check_board_validity(self):
+        # Check for same numbers in row:
+        for row in self.cells:
+            values = []
+            for cell in row:
+                if cell.value:
+                    if cell.value in values:
+                        raise Exception('Board is invalid!')
+                    else:
+                        values.append(cell.value)
+
+        # Check for same numbers in column:
+        for col_nr in range(len(self.cells)):
+            values = []
+            for row in self.cells:
+                cell = row[col_nr]
+                if cell.value:
+                    if cell.value in values:
+                        raise Exception('Board is invalid!')
+                    else:
+                        values.append(cell.value)
+
+        # Check for same numbers in square:
+        for square in self.squares:
+            values = []
+            for cell in square:
+                if cell.value:
+                    if cell.value in values:
+                        raise Exception('Board is invalid!')
+                    else:
+                        values.append(cell.value)
+
     def solve(self):
-        while not self.check_if_solved():
-            self.check_row()
-            self.check_column()
-            self.check_square()
-        print('Sudoku solved!')
+        self.check_row()
+        # while not self.check_if_solved():
+        #     self.check_row()
+        #     self.check_column()
+        #     self.check_square()
+        # print('Sudoku solved!')
 
     def check_if_solved(self):
         for row in self.cells:
@@ -34,7 +68,7 @@ class SudokuSolver:
             self.update_cells(values, cells_in_row)
 
     def check_column(self):
-        for col_nr in range(0, 9):
+        for col_nr in range(len(self.cells)):
             cells_in_column = []
             values = []
             for row in self.cells:
@@ -71,26 +105,37 @@ class Board(Frame):
         # Prepare canvas and buttons:
         self.pack(fill=BOTH)
         self.canvas = Canvas(self, width=WIDTH, height=HEIGHT)
-        self.canvas.pack(side=BOTTOM)
-
-        self.reset_button = Button(self, text='Reset', width=24, bd=3, bg='OrangeRed3', fg='white',
-                                   activebackground='OrangeRed4', activeforeground='white', font=('Script', 10, 'bold'),
-                                   relief="flat", command=self.reset_board)
-        self.reset_button.pack(fill=BOTH, expand=True, side=LEFT)
+        self.canvas.pack(side=RIGHT)
 
         self.solve_button = Button(self, text='Solve', width=24, bd=3, bg='chartreuse4', fg='white',
                                    activebackground='dark green', activeforeground='white', font=('Script', 10, 'bold'),
                                    relief="flat", command=self.solve)
-        self.solve_button.pack(fill=BOTH, expand=True, side=RIGHT)
+        self.solve_button.pack(fill=BOTH, expand=True, side=TOP)
+
+        self.undo_button = Button(self, text='Undo', width=24, bd=3, bg='RoyalBlue2', fg='white',
+                                  activebackground='RoyalBlue3', activeforeground='white', font=('Script', 10, 'bold'),
+                                  relief="flat", command=self.undo)
+        self.undo_button.pack(fill=BOTH, expand=True, side=TOP)
+
+        self.clear_button = Button(self, text='Clear', width=24, bd=3, bg='DarkGoldenrod2', fg='white',
+                                   activebackground='DarkGoldenrod3', activeforeground='white',
+                                   font=('Script', 10, 'bold'),
+                                   relief="flat", command=self.clear_board)
+        self.clear_button.pack(fill=BOTH, expand=True, side=TOP)
+
+        self.reset_button = Button(self, text='Reset', width=24, bd=3, bg='OrangeRed3', fg='white',
+                                   activebackground='OrangeRed4', activeforeground='white', font=('Script', 10, 'bold'),
+                                   relief="flat", command=self.reset_board)
+        self.reset_button.pack(fill=BOTH, expand=True, side=TOP)
 
         # Create cells and organise them:
         self.draw_grid()
         self.cells = []
-        self.create_cells()
-        self.current_cell = self.cells[4][4]
-        self.current_cell.highlight()
         self.squares = []
+        self.create_cells()
         self.create_squares(self.cells)
+        self.current_cell = self.cells[0][0]
+        self.current_cell.highlight()
 
         # Bind necessary keys:
         self.canvas.focus_set()
@@ -103,6 +148,8 @@ class Board(Frame):
         self.canvas.bind("<space>", lambda key_press: self.delete_digit())
         self.canvas.bind("<BackSpace>", lambda key_press: self.delete_digit())
 
+        # Miscellaneous:
+        self.sudoku = []  # A puzzle ready to be solved, used to clear the solved numbers
         self.is_solved = False
 
     def draw_grid(self):
@@ -173,6 +220,7 @@ class Board(Frame):
     def delete_digit(self):
         if not self.is_solved:
             self.canvas.delete(self.current_cell.unique_tag)
+            self.current_cell.value = None
 
     def switch_cells_with_arrows(self, arrow_press):
         arrow = arrow_press.keysym
@@ -208,8 +256,28 @@ class Board(Frame):
         self.current_cell = new_current_cell
 
     def solve(self):
-        self.is_solved = True
-        solver = SudokuSolver(self.cells, self.squares)
+        self.sudoku = self.cells
+        try:
+            solver = SudokuSolver(self.cells, self.squares)
+            solver.solve()
+            self.is_solved = True
+        except Exception as inst:
+            print(inst.args[0])
+            self.clear_board()
+
+    def undo(self):
+        pass
+
+    def clear_board(self):
+        self.is_solved = False
+        for row in self.sudoku:
+            for cell in row:
+                print(cell.value, cell.possible_values)
+                if not cell.value:
+                    self.canvas.delete(cell.unique_tag)
+                    cell.value = None
+                    cell.possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        self.cells = self.sudoku
 
     def reset_board(self):
         self.is_solved = False
@@ -247,7 +315,7 @@ class Cell:
 
 root = Tk()
 root.title("Sudoku Solver")
-root.geometry(f'{int(WIDTH * 1)}x{int(HEIGHT * 1.05)}')
+root.geometry(f'{int(WIDTH * 1.2)}x{HEIGHT}')
 
 app = Board(root)
 
