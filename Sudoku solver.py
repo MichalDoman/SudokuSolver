@@ -11,6 +11,7 @@ class SudokuSolver:
         self.cells = board_cells
         self.squares = board_squares
         self.check_board_validity()
+        self.updates_done = 0 # Used to determine whether the solving algorithms are advancing
 
     def check_board_validity(self):
         # Check for same numbers in row:
@@ -46,10 +47,15 @@ class SudokuSolver:
 
     def solve(self):
         while not self.check_if_solved():
+            self.updates_done = 0
+
             self.check_row()
             self.check_column()
             self.check_square()
-        print('Sudoku solved!')
+
+            if self.updates_done == 0:
+                print('This puzzle is unsolvable!')
+                break
 
     def check_if_solved(self):
         for row in self.cells:
@@ -85,18 +91,18 @@ class SudokuSolver:
                     values.append(cell.value)
             self.update_cells(values, square)
 
-    @staticmethod
-    def update_cells(values, influence_cells):
+    def update_cells(self, values, influence_cells):
         for cell in influence_cells:
             for value in values:
                 if not cell.value:
                     if value in cell.possible_values:
                         cell.possible_values.remove(value)
+                        self.updates_done += 1
 
             if len(cell.possible_values) == 1 and not cell.value:
                 value = cell.possible_values[0]
                 cell.show_digit(value, 'slate grey')
-
+                self.updates_done += 1
 
 class Board(Frame):
     def __init__(self, master):
@@ -132,7 +138,7 @@ class Board(Frame):
                                     bd=0, pady=20, bg='dim grey',
                                     fg='white', activebackground='dim grey', activeforeground='white',
                                     selectcolor='dim grey', font=('Script', 8, 'bold'), indicatoron=False,
-                                    justify=CENTER, command=self.auto_switch)
+                                    justify=CENTER, command=self.change_checkbutton_label)
         self.checkbox.pack(fill=BOTH)
 
         # Create cells and organise them:
@@ -144,6 +150,9 @@ class Board(Frame):
         self.current_cell = self.cells[0][0]
         self.current_cell.highlight()
 
+        self.is_solved = False
+        self.is_auto_switching = True
+
         # Bind necessary keys:
         self.canvas.focus_set()
         self.canvas.bind("<Button-1>", self.choose_cell)
@@ -153,10 +162,7 @@ class Board(Frame):
         self.canvas.bind("<Left>", self.switch_cells_with_arrows)
         self.canvas.bind("<Right>", self.switch_cells_with_arrows)
         self.canvas.bind("<space>", lambda key_press: self.delete_digit())
-        self.canvas.bind("<BackSpace>", lambda key_press: self.delete_digit())
-
-        # Miscellaneous:
-        self.is_solved = False
+        self.canvas.bind("<BackSpace>", lambda key_press: self.undo())
 
     def draw_grid(self):
         for line_nr in range(10):
@@ -224,23 +230,27 @@ class Board(Frame):
                     self.current_cell.show_digit(int(key_press.char), 'black')
                     self.auto_switch()
 
-    def auto_switch(self):
+    def change_checkbutton_label(self):
         if self.auto_cell_switch.get():
             self.checkbox['text'] = 'Auto Cell Switch: OFF'
-            return
+            self.is_auto_switching = False
         else:
             self.checkbox['text'] = 'Auto Cell Switch: ON'
+            self.is_auto_switching = True
+
+    def auto_switch(self):
+        if self.is_auto_switching:
             if self.current_cell.list_coord[1] == 8:
                 self.switch_cells_with_arrows('Right')
                 self.switch_cells_with_arrows('Down')
             else:
                 self.switch_cells_with_arrows('Right')
 
-
     def delete_digit(self):
         if not self.is_solved:
             self.canvas.delete(self.current_cell.unique_tag)
             self.current_cell.value = None
+        self.auto_switch()
 
     def switch_cells_with_arrows(self, arrow_press):
         # Adjust for auto_switch function:
@@ -293,6 +303,7 @@ class Board(Frame):
         pass
 
     def clear_board(self):
+        self.is_solved = False
         for row in self.cells:
             for cell in row:
                 if len(cell.possible_values) == 1:
