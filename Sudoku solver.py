@@ -222,12 +222,20 @@ class Board(Frame):
                 key_char = key_press.char
                 if key_char.isdigit() and int(key_char) != 0:
                     self.current_cell.show_digit(int(key_press.char), 'black')
+                    self.auto_switch()
 
     def auto_switch(self):
         if self.auto_cell_switch.get():
             self.checkbox['text'] = 'Auto Cell Switch: OFF'
+            return
         else:
             self.checkbox['text'] = 'Auto Cell Switch: ON'
+            if self.current_cell.list_coord[1] == 8:
+                self.switch_cells_with_arrows('Right')
+                self.switch_cells_with_arrows('Down')
+            else:
+                self.switch_cells_with_arrows('Right')
+
 
     def delete_digit(self):
         if not self.is_solved:
@@ -235,8 +243,13 @@ class Board(Frame):
             self.current_cell.value = None
 
     def switch_cells_with_arrows(self, arrow_press):
-        arrow = arrow_press.keysym
+        # Adjust for auto_switch function:
+        if isinstance(arrow_press, str):
+            arrow = arrow_press
+        else:
+            arrow = arrow_press.keysym
 
+        # Function's main body:
         if arrow == 'Right':
             list_row = self.current_cell.list_coord[0]
             list_col = self.current_cell.list_coord[1] + 1
