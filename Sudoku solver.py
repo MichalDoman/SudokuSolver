@@ -1,4 +1,5 @@
 from tkinter import *
+from example_sudokus import *
 
 SIDE = 100
 MARGIN = 50
@@ -11,7 +12,7 @@ class SudokuSolver:
         self.cells = board_cells
         self.squares = board_squares
         self.check_board_validity()
-        self.updates_done = 0 # Used to determine whether the solving algorithms are advancing
+        self.updates_done = 0  # Used to determine whether the solving algorithms are advancing
 
     def check_board_validity(self):
         # Check for same numbers in row:
@@ -54,7 +55,7 @@ class SudokuSolver:
             self.check_square()
 
             if self.updates_done == 0:
-                print('This puzzle is unsolvable!')
+                show_pop_up('Error', 'This puzzle is unsolvable!')
                 break
 
     def check_if_solved(self):
@@ -91,6 +92,21 @@ class SudokuSolver:
                     values.append(cell.value)
             self.update_cells(values, square)
 
+    def check_pairs(self):
+        pass
+
+    def check_triples(self):
+        pass
+
+    def check_hidden_singles(self):
+        pass
+
+    def check_hidden_pairs(self):
+        pass
+
+    def check_hidden_triples(self):
+        pass
+
     def update_cells(self, values, influence_cells):
         for cell in influence_cells:
             for value in values:
@@ -103,6 +119,7 @@ class SudokuSolver:
                 value = cell.possible_values[0]
                 cell.show_digit(value, 'slate grey')
                 self.updates_done += 1
+
 
 class Board(Frame):
     def __init__(self, master):
@@ -149,6 +166,7 @@ class Board(Frame):
         self.create_squares(self.cells)
         self.current_cell = self.cells[0][0]
         self.current_cell.highlight()
+        load_board(self.cells, easy_board)
 
         self.is_solved = False
         self.is_auto_switching = True
@@ -344,6 +362,16 @@ class Cell:
         self.value = None
         self.possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.canvas.delete(self.unique_tag)
+
+
+def show_pop_up(title, text):
+    pop_up = Toplevel(root)
+    pop_up.geometry(f'{int(WIDTH * 0.7)}x{int(HEIGHT * 0.3)}')
+    pop_up.title(title)
+    Label(pop_up, text=text, font=('Script', 16, 'bold')).place(relx=0.5, rely=0.3, anchor='center')
+    Button(pop_up, width=25, height=2, text='OK', bg='chartreuse4', fg='white',
+           activebackground='dark green', activeforeground='white', font=('Script', 10, 'bold'),
+           relief="flat", command=pop_up.destroy).place(relx=0.5, rely=0.65, anchor='center')
 
 
 root = Tk()
