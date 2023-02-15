@@ -1,4 +1,4 @@
-easy_board = [[9, 3, 4, 1, 8, 2, 5, 6, None],
+EASY_BOARD = [[9, 3, 4, 1, 8, 2, 5, 6, None],
               [2, None, None, None, None, None, None, None, None],
               [8, 6, 1, 7, 3, 5, 4, None, None],
               [None, 2, 8, None, None, 7, None, 4, None],

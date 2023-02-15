@@ -166,8 +166,10 @@ class Board(Frame):
         self.create_squares(self.cells)
         self.current_cell = self.cells[0][0]
         self.current_cell.highlight()
-        load_board(self.cells, easy_board)
+        load_board(self.cells, EASY_BOARD)  # used for testing
 
+        # Miscellaneous:
+        self.undo_list = []  # stores every action for undo function
         self.is_solved = False
         self.is_auto_switching = True
 
@@ -181,6 +183,7 @@ class Board(Frame):
         self.canvas.bind("<Right>", self.switch_cells_with_arrows)
         self.canvas.bind("<space>", lambda key_press: self.delete_digit())
         self.canvas.bind("<BackSpace>", lambda key_press: self.undo())
+        self.canvas.bind("<Control-z>", lambda key_press: self.undo())
 
     def draw_grid(self):
         for line_nr in range(10):
@@ -306,6 +309,10 @@ class Board(Frame):
 
         new_current_cell = self.cells[list_row][list_col]
         new_current_cell.highlight()
+        # update undo_list with the current action
+        previous_cell = self.current_cell
+        self.undo_list.append(('position', previous_cell))
+
         self.current_cell = new_current_cell
 
     def solve(self):
@@ -318,7 +325,20 @@ class Board(Frame):
             self.clear_board()
 
     def undo(self):
-        pass
+        last_move = self.undo_list[-1]
+
+        if last_move[0] == 'position':
+            new_current_cell = last_move[1]
+            new_current_cell.highlight()
+            self.current_cell = new_current_cell
+
+        elif last_move[0] == 'value':
+            pass
+
+        elif last_move[0] == 'board':
+            pass
+
+        self.undo_list.pop(-1)
 
     def clear_board(self):
         self.is_solved = False
@@ -364,12 +384,12 @@ class Cell:
         self.canvas.delete(self.unique_tag)
 
 
-def show_pop_up(title, text):
+def show_pop_up(title, label_text, button_text='OK'):
     pop_up = Toplevel(root)
     pop_up.geometry(f'{int(WIDTH * 0.7)}x{int(HEIGHT * 0.3)}')
     pop_up.title(title)
-    Label(pop_up, text=text, font=('Script', 16, 'bold')).place(relx=0.5, rely=0.3, anchor='center')
-    Button(pop_up, width=25, height=2, text='OK', bg='chartreuse4', fg='white',
+    Label(pop_up, text=label_text, font=('Script', 16, 'bold')).place(relx=0.5, rely=0.3, anchor='center')
+    Button(pop_up, width=25, height=2, text=button_text, bg='chartreuse4', fg='white',
            activebackground='dark green', activeforeground='white', font=('Script', 10, 'bold'),
            relief="flat", command=pop_up.destroy).place(relx=0.5, rely=0.65, anchor='center')
 
