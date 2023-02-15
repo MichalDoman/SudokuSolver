@@ -47,7 +47,7 @@ class SudokuSolver:
                         values.append(cell.value)
 
     def solve(self):
-        # !!! if a cell is solved it has to have 1 value in possible_values !!!
+        # !!! if a cell is solved, it has to have only 1 value in possible_values !!!
         while not self.check_if_solved():
             self.updates_done = 0
 
@@ -351,7 +351,7 @@ class Board(Frame):
 
             elif last_move[0] == 'clear':
                 self.solve()
-                self.undo_list.pop(-1)  # removes two items from the list since self.solve add an extra one
+                self.undo_list.pop(-1)  # removes two items from the list since self.solve adds an extra one
 
             elif last_move[0] == 'solve':
                 self.clear_board()
@@ -360,17 +360,23 @@ class Board(Frame):
 
             elif last_move[0] == 'reset':
                 new_board = last_move[1]
+                was_solved = False  # checks for 'solve + reset' situation
                 for row_nr in range(9):
                     for col_nr in range(9):
                         digit = new_board[row_nr][col_nr]
                         cell = self.cells[row_nr][col_nr]
+                        if cell.possible_values != 9:
+                            was_solved = True
                         cell.value = digit
                         if digit is not None:
                             cell.show_digit(digit)
                         else:
                             cell.reset()
+                if was_solved:
+                    self.undo_list.pop(-1)
 
             self.undo_list.pop(-1)
+        print(self.undo_list)
 
     def clear_board(self):
         self.is_solved = False
@@ -392,7 +398,10 @@ class Board(Frame):
             previous_row = []
             for col_nr in range(len(row)):
                 cell = row[col_nr]
-                value = cell.value
+                if len(cell.possible_values) != 9:  # if a cell was solved by the solver
+                    value = None
+                else:
+                    value = cell.value
                 previous_row.append(value)
             previous_board.append(previous_row)
         self.undo_list.append(('reset', previous_board))
