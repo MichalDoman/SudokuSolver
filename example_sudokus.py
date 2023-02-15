@@ -19,4 +19,4 @@ def load_board(cells, board):
             cell = cells[row_nr][col_nr]
             cell.value = digit
             if digit is not None:
-                cell.show_digit(digit, 'black')
+                cell.show_digit(digit)

@@ -47,6 +47,7 @@ class SudokuSolver:
                         values.append(cell.value)
 
     def solve(self):
+        # !!! if a cell is solved it has to have 1 value in possible_values !!!
         while not self.check_if_solved():
             self.updates_done = 0
 
@@ -245,11 +246,15 @@ class Board(Frame):
 
     def choose_digit(self, key_press):
         if not self.is_solved:
-            if self.current_cell:
-                key_char = key_press.char
-                if key_char.isdigit() and int(key_char) != 0:
-                    self.current_cell.show_digit(int(key_press.char), 'black')
-                    self.auto_switch()
+            key_char = key_press.char
+            if key_char.isdigit() and int(key_char) != 0:
+                # update undo_list with the current action
+                previous_cell = self.current_cell
+                previous_value = self.current_cell.value
+                self.undo_list.append(('value', previous_cell, previous_value))
+
+                self.current_cell.show_digit(int(key_press.char), 'black')
+                self.auto_switch()
 
     def change_checkbutton_label(self):
         if self.auto_cell_switch.get():
@@ -269,6 +274,11 @@ class Board(Frame):
 
     def delete_digit(self):
         if not self.is_solved:
+            # update undo_list with the current action
+            previous_cell = self.current_cell
+            previous_value = self.current_cell.value
+            self.undo_list.append(('value', previous_cell, previous_value))
+
             self.canvas.delete(self.current_cell.unique_tag)
             self.current_cell.value = None
         self.auto_switch()
@@ -309,10 +319,6 @@ class Board(Frame):
 
         new_current_cell = self.cells[list_row][list_col]
         new_current_cell.highlight()
-        # update undo_list with the current action
-        previous_cell = self.current_cell
-        self.undo_list.append(('position', previous_cell))
-
         self.current_cell = new_current_cell
 
     def solve(self):
@@ -320,28 +326,58 @@ class Board(Frame):
             solver = SudokuSolver(self.cells, self.squares)
             solver.solve()
             self.is_solved = True
+
+            # update undo_list with the current action
+            self.undo_list.append(('solve',))
         except Exception as inst:
             print(inst.args[0])
             self.clear_board()
 
     def undo(self):
-        last_move = self.undo_list[-1]
+        if self.undo_list:
+            last_move = self.undo_list[-1]
 
-        if last_move[0] == 'position':
-            new_current_cell = last_move[1]
-            new_current_cell.highlight()
-            self.current_cell = new_current_cell
+            if last_move[0] == 'value':
+                new_current_cell = last_move[1]
+                new_value = last_move[2]
 
-        elif last_move[0] == 'value':
-            pass
+                new_current_cell.highlight()
+                self.current_cell = new_current_cell
+                self.current_cell.value = new_value
+                if new_value:
+                    self.current_cell.show_digit(new_value)
+                else:
+                    self.current_cell.reset()
 
-        elif last_move[0] == 'board':
-            pass
+            elif last_move[0] == 'clear':
+                self.solve()
+                self.undo_list.pop(-1)  # removes two items from the list since self.solve add an extra one
 
-        self.undo_list.pop(-1)
+            elif last_move[0] == 'solve':
+                self.clear_board()
+                self.undo_list.pop(-1)  # -//-
+
+
+            elif last_move[0] == 'reset':
+                new_board = last_move[1]
+                for row_nr in range(9):
+                    for col_nr in range(9):
+                        digit = new_board[row_nr][col_nr]
+                        cell = self.cells[row_nr][col_nr]
+                        cell.value = digit
+                        if digit is not None:
+                            cell.show_digit(digit)
+                        else:
+                            cell.reset()
+
+            self.undo_list.pop(-1)
 
     def clear_board(self):
         self.is_solved = False
+
+        # update undo_list with the current action
+        self.undo_list.append(('clear',))
+
         for row in self.cells:
             for cell in row:
                 if len(cell.possible_values) == 1:
@@ -349,6 +385,19 @@ class Board(Frame):
 
     def reset_board(self):
         self.is_solved = False
+
+        # update undo_list with the current action:
+        previous_board = []
+        for row in self.cells:
+            previous_row = []
+            for col_nr in range(len(row)):
+                cell = row[col_nr]
+                value = cell.value
+                previous_row.append(value)
+            previous_board.append(previous_row)
+        self.undo_list.append(('reset', previous_board))
+
+        # reset board:
         for row in self.cells:
             for cell in row:
                 cell.reset()
@@ -371,7 +420,7 @@ class Cell:
         self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, tags='highlight', outline='RoyalBlue2',
                                      width=7)
 
-    def show_digit(self, digit, color):
+    def show_digit(self, digit, color='black'):
         self.canvas.delete(self.unique_tag)
         x = self.x1 + SIDE / 2
         y = self.y1 + SIDE / 2
