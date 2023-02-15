@@ -167,7 +167,7 @@ class Board(Frame):
         self.create_squares(self.cells)
         self.current_cell = self.cells[0][0]
         self.current_cell.highlight()
-        load_board(self.cells, EASY_BOARD)  # used for testing
+        load_board(self.cells, MEDIUM_BOARD)  # used for testing
 
         # Miscellaneous:
         self.undo_list = []  # stores every action for undo function
@@ -249,11 +249,12 @@ class Board(Frame):
             key_char = key_press.char
             if key_char.isdigit() and int(key_char) != 0:
                 # update undo_list with the current action
-                previous_cell = self.current_cell
-                previous_value = self.current_cell.value
-                self.undo_list.append(('value', previous_cell, previous_value))
+                if int(key_char) != self.current_cell.value:
+                    previous_cell = self.current_cell
+                    previous_value = self.current_cell.value
+                    self.undo_list.append(('value', previous_cell, previous_value))
 
-                self.current_cell.show_digit(int(key_press.char), 'black')
+                self.current_cell.show_digit(int(key_char), 'black')
                 self.auto_switch()
 
     def change_checkbutton_label(self):
@@ -275,12 +276,13 @@ class Board(Frame):
     def delete_digit(self):
         if not self.is_solved:
             # update undo_list with the current action
-            previous_cell = self.current_cell
-            previous_value = self.current_cell.value
-            self.undo_list.append(('value', previous_cell, previous_value))
+            if self.current_cell.value is not None:
+                previous_cell = self.current_cell
+                previous_value = self.current_cell.value
+                self.undo_list.append(('value', previous_cell, previous_value))
 
-            self.canvas.delete(self.current_cell.unique_tag)
-            self.current_cell.value = None
+                self.canvas.delete(self.current_cell.unique_tag)
+                self.current_cell.value = None
         self.auto_switch()
 
     def switch_cells_with_arrows(self, arrow_press):
@@ -325,10 +327,12 @@ class Board(Frame):
         try:
             solver = SudokuSolver(self.cells, self.squares)
             solver.solve()
+            # update undo_list with the current action
+            if not self.is_solved:
+                self.undo_list.append(('solve',))
+
             self.is_solved = True
 
-            # update undo_list with the current action
-            self.undo_list.append(('solve',))
         except Exception as inst:
             print(inst.args[0])
             self.clear_board()
@@ -376,18 +380,21 @@ class Board(Frame):
                     self.undo_list.pop(-1)
 
             self.undo_list.pop(-1)
-        print(self.undo_list)
+
 
     def clear_board(self):
         self.is_solved = False
-
-        # update undo_list with the current action
-        self.undo_list.append(('clear',))
+        is_cleared = False
 
         for row in self.cells:
             for cell in row:
                 if len(cell.possible_values) == 1:
+                    is_cleared = True
                     cell.reset()
+
+        # update undo_list with the current action
+        if is_cleared:
+            self.undo_list.append(('clear',))
 
     def reset_board(self):
         self.is_solved = False
