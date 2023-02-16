@@ -8,9 +8,10 @@ HEIGHT = WIDTH
 
 
 class SudokuSolver:
-    def __init__(self, board_cells, board_squares):
-        self.cells = board_cells
-        self.squares = board_squares
+    def __init__(self, cells, columns, squares):
+        self.cells = cells
+        self.columns = columns
+        self.squares = squares
         self.check_board_validity()
         self.updates_done = 0  # Used to determine whether the solving algorithms are advancing
 
@@ -47,15 +48,13 @@ class SudokuSolver:
                         values.append(cell.value)
 
     def solve(self):
-        # !!! if a cell is solved, it has to have only 1 value in possible_values !!!
+        # !!! if a cell is solved, it has to have only 1 value in cell.possible_values !!!
         while not self.check_if_solved():
             self.updates_done = 0
 
-            self.check_row()
-            self.check_column()
-            self.check_square()
+            self.check_singles()
 
-            if self.updates_done == 0:
+            if self.updates_done == 0:  # temporary
                 show_pop_up('Error', 'This puzzle is unsolvable!')
                 break
 
@@ -66,26 +65,24 @@ class SudokuSolver:
                     return False
         return True
 
-    def check_row(self):
-        for cells_in_row in self.cells:
+    def check_singles(self):
+        # Check in rows:
+        for row in self.cells:
             values = []
-            for cell in cells_in_row:
+            for cell in row:
                 if cell.value:
                     values.append(cell.value)
-            self.update_cells(values, cells_in_row)
+            self.update_cells(values, row)
 
-    def check_column(self):
-        for col_nr in range(len(self.cells)):
-            cells_in_column = []
+        # Check in columns:
+        for column in self.columns:
             values = []
-            for row in self.cells:
-                cell = row[col_nr]
-                cells_in_column.append(cell)
+            for cell in column:
                 if cell.value:
                     values.append(cell.value)
-            self.update_cells(values, cells_in_column)
+            self.update_cells(values, column)
 
-    def check_square(self):
+        # Check in squares:
         for square in self.squares:
             values = []
             for cell in square:
@@ -100,7 +97,10 @@ class SudokuSolver:
         pass
 
     def check_hidden_singles(self):
-        pass
+        for row in self.cells:
+            for cell in row:
+                for value in cell.possible_values:
+                    pass
 
     def check_hidden_pairs(self):
         pass
@@ -162,9 +162,11 @@ class Board(Frame):
         # Create cells and organise them:
         self.draw_grid()
         self.cells = []
+        self.columns = []
         self.squares = []
         self.create_cells()
-        self.create_squares(self.cells)
+        self.create_columns()
+        self.create_squares()
         self.current_cell = self.cells[0][0]
         self.current_cell.highlight()
         load_board(self.cells, MEDIUM_BOARD)  # used for testing
@@ -222,13 +224,21 @@ class Board(Frame):
 
             self.cells.append(row)
 
-    def create_squares(self, cells):
+    def create_columns(self):
+        for col_nr in range(len(self.cells)):
+            column = []
+            for row in self.cells:
+                cell_in_column = row[col_nr]
+                column.append(cell_in_column)
+            self.columns.append(column)
+
+    def create_squares(self):
         for square_x in range(0, 9, 3):  # for 0, 3 and 6
             for square_y in range(0, 9, 3):
                 square = []
                 for row in range(square_x, square_x + 3):  # (0, 3), (3, 6) and (6, 9)
                     for col in range(square_y, square_y + 3):
-                        cell = cells[row][col]
+                        cell = self.cells[row][col]
                         square.append(cell)
                 self.squares.append(square)
 
@@ -325,7 +335,7 @@ class Board(Frame):
 
     def solve(self):
         try:
-            solver = SudokuSolver(self.cells, self.squares)
+            solver = SudokuSolver(self.cells, self.columns, self.squares)
             solver.solve()
             # update undo_list with the current action
             if not self.is_solved:
@@ -380,7 +390,6 @@ class Board(Frame):
                     self.undo_list.pop(-1)
 
             self.undo_list.pop(-1)
-
 
     def clear_board(self):
         self.is_solved = False
