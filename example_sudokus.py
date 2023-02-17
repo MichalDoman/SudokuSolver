@@ -1,12 +1,12 @@
-TEST_BOARD = [[1, None, None, 3, None, None, None, None, 9],
+TEST_BOARD = [[1, None, None, 3, None, None, 4, None, 9],
+              [2, None, None, None, None, None, None, None, None],
               [None, None, None, None, None, None, None, None, None],
-              [9, None, None, None, None, None, None, None, None],
-              [3, None, 4, None, None, None, None, None, None],
-              [5, None, None, None, 4, None, None, None, None],
-              [6, None, None, None, None, None, 4, None, None],
-              [7, None, None, None, None, 4, None, None, None],
-              [2, None, None, None, None, None, None, 4, None],
-              [4, None, None, None, None, None, None, None, None]]
+              [None, None, 4, None, None, None, None, None, None],
+              [None, None, None, None, 4, None, None, None, None],
+              [None, None, None, None, None, None, 4, None, None],
+              [None, None, None, None, None, 4, None, None, None],
+              [None, None, None, None, None, None, None, 4, None],
+              [None, None, None, 4, None, None, None, None, None]]
 
 MEDIUM_BOARD = [[None, 5, 4, 6, None, None, 8, 3, 7],
                 [6, 8, 2, 5, None, None, None, None, None],

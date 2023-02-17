@@ -5,13 +5,14 @@ SIDE = 100
 MARGIN = 50
 WIDTH = 9 * SIDE + 2 * MARGIN
 HEIGHT = WIDTH
-
+BOARD_TO_LOAD = TEST_BOARD
 
 class SudokuSolver:
     def __init__(self, cells, columns, squares):
         self.cells = cells
         self.columns = columns
         self.squares = squares
+        self.influence_regions = [self.cells, self.columns, self.squares]
         self.check_board_validity()
         self.updates_done = 0  # Used to determine whether the solving algorithms are advancing
 
@@ -67,29 +68,13 @@ class SudokuSolver:
         return True
 
     def check_singles(self):
-        # Check in rows:
-        for row in self.cells:
-            values = []
-            for cell in row:
-                if cell.value:
-                    values.append(cell.value)
-            self.update_cells(values, row)
-
-        # Check in columns:
-        for column in self.columns:
-            values = []
-            for cell in column:
-                if cell.value:
-                    values.append(cell.value)
-            self.update_cells(values, column)
-
-        # Check in squares:
-        for square in self.squares:
-            values = []
-            for cell in square:
-                if cell.value:
-                    values.append(cell.value)
-            self.update_cells(values, square)
+        for region in self.influence_regions:
+            for dim in region:
+                values = []
+                for cell in dim:
+                    if cell.value:
+                        values.append(cell.value)
+                self.update_cells(values, dim)
 
     def check_pairs(self):
         pass
@@ -98,30 +83,31 @@ class SudokuSolver:
         pass
 
     def check_hidden_singles(self):
-        # Find hidden singles in rows:
-        for row in self.cells:
-            modified_row = row.copy()
-            # Find all cells in a row that are still to be solved:
-            for cell in row:
-                if cell.value:
-                    modified_row.remove(cell)
+        for region in self.influence_regions:
+            for dim in region:
+                modified_dim = dim.copy()
 
-            # Get empty cells excluding the one that is currently analysed:
-            for cell in modified_row:
-                other_cells = modified_row.copy()
-                other_cells.remove(cell)
-                # Check if any digit is single in the row:
-                for value in cell.possible_values:
-                    if len(cell.possible_values) > 1:
-                        is_single = True
-                        for other_cell in other_cells:
-                            if value in other_cell.possible_values:
-                                is_single = False
-                                break
-                        if is_single:
-                            cell.possible_values = [value]
-                            print(cell.possible_values)
-                            self.update_cells([value], row)
+                # Find all cells in a dimension that are still to be solved:
+                for cell in dim:
+                    if cell.value:
+                        modified_dim.remove(cell)
+
+                # Get empty cells excluding the one that is currently analysed:
+                for cell in modified_dim:
+                    other_cells = modified_dim.copy()
+                    other_cells.remove(cell)
+
+                    # Check if any digit in the cell, is single in the dimension:
+                    for value in cell.possible_values:
+                        if len(cell.possible_values) > 1:
+                            is_single = True
+                            for other_cell in other_cells:
+                                if value in other_cell.possible_values:
+                                    is_single = False
+                                    break
+                            if is_single:
+                                cell.possible_values = [value]
+                                self.update_cells([value], dim)
 
     def check_hidden_pairs(self):
         pass
@@ -190,7 +176,7 @@ class Board(Frame):
         self.create_squares()
         self.current_cell = self.cells[0][0]
         self.current_cell.highlight()
-        load_board(self.cells, TEST_BOARD)  # used for testing
+        load_board(self.cells, BOARD_TO_LOAD)  # used for testing
 
         # Miscellaneous:
         self.undo_list = []  # stores every action for undo function
