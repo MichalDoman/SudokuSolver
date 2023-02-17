@@ -5,48 +5,25 @@ SIDE = 100
 MARGIN = 50
 WIDTH = 9 * SIDE + 2 * MARGIN
 HEIGHT = WIDTH
-BOARD_TO_LOAD = TEST_BOARD
+
+BOARD_TO_LOAD = MEDIUM_BOARD
 
 class SudokuSolver:
-    def __init__(self, cells, columns, squares):
-        self.cells = cells
-        self.columns = columns
-        self.squares = squares
-        self.influence_regions = [self.cells, self.columns, self.squares]
+    def __init__(self, rows, columns, squares):
+        self.cluster_types = [rows, columns, squares]
         self.check_board_validity()
         self.updates_done = 0  # Used to determine whether the solving algorithms are advancing
 
     def check_board_validity(self):
-        # Check for same numbers in row:
-        for row in self.cells:
-            values = []
-            for cell in row:
-                if cell.value:
-                    if cell.value in values:
-                        raise Exception('Board is invalid!')
-                    else:
-                        values.append(cell.value)
-
-        # Check for same numbers in column:
-        for col_nr in range(len(self.cells)):
-            values = []
-            for row in self.cells:
-                cell = row[col_nr]
-                if cell.value:
-                    if cell.value in values:
-                        raise Exception('Board is invalid!')
-                    else:
-                        values.append(cell.value)
-
-        # Check for same numbers in square:
-        for square in self.squares:
-            values = []
-            for cell in square:
-                if cell.value:
-                    if cell.value in values:
-                        raise Exception('Board is invalid!')
-                    else:
-                        values.append(cell.value)
+        for clusters_type in self.cluster_types:
+            for cluster in clusters_type:
+                values = []
+                for cell in cluster:
+                    if cell.value:
+                        if cell.value in values:
+                            raise Exception('Board is invalid!')
+                        else:
+                            values.append(cell.value)
 
     def solve(self):
         # !!! if a cell is solved, it has to have only 1 value in cell.possible_values !!!
@@ -61,20 +38,20 @@ class SudokuSolver:
                 # break
 
     def check_if_solved(self):
-        for row in self.cells:
+        for row in self.cluster_types[0]:
             for cell in row:
                 if not cell.value:
                     return False
         return True
 
     def check_singles(self):
-        for region in self.influence_regions:
-            for dim in region:
+        for clusters_type in self.cluster_types:
+            for cluster in clusters_type:
                 values = []
-                for cell in dim:
+                for cell in cluster:
                     if cell.value:
                         values.append(cell.value)
-                self.update_cells(values, dim)
+                self.update_cells(values, cluster, 'slate grey')
 
     def check_pairs(self):
         pass
@@ -83,31 +60,36 @@ class SudokuSolver:
         pass
 
     def check_hidden_singles(self):
-        for region in self.influence_regions:
-            for dim in region:
-                modified_dim = dim.copy()
+        for clusters_type in self.cluster_types:
+            for cluster in clusters_type:
+                empty_cluster_cells = cluster.copy()
+                filled_cluster_cells = []
 
                 # Find all cells in a dimension that are still to be solved:
-                for cell in dim:
+                for cell in cluster:
                     if cell.value:
-                        modified_dim.remove(cell)
+                        empty_cluster_cells.remove(cell)
+                        filled_cluster_cells.append(cell)
 
                 # Get empty cells excluding the one that is currently analysed:
-                for cell in modified_dim:
-                    other_cells = modified_dim.copy()
-                    other_cells.remove(cell)
+                if len(empty_cluster_cells) > 1:
+                    for cell in empty_cluster_cells:
+                        other_cells = empty_cluster_cells.copy()
+                        other_cells.remove(cell)
 
-                    # Check if any digit in the cell, is single in the dimension:
-                    for value in cell.possible_values:
-                        if len(cell.possible_values) > 1:
-                            is_single = True
-                            for other_cell in other_cells:
-                                if value in other_cell.possible_values:
-                                    is_single = False
-                                    break
-                            if is_single:
-                                cell.possible_values = [value]
-                                self.update_cells([value], dim)
+                        # Check if any digit in the cell, is single in the dimension:
+                        for value in cell.possible_values:
+                            if len(cell.possible_values) > 1:
+                                is_single = True
+                                for other_cell in other_cells:
+                                    if value in other_cell.possible_values:
+                                        is_single = False
+                                        break
+                                if is_single:
+                                    cell.possible_values = [value]
+                                    self.update_cells([value], cluster, 'red')
+                else:
+                    break
 
     def check_hidden_pairs(self):
         pass
@@ -115,18 +97,20 @@ class SudokuSolver:
     def check_hidden_triples(self):
         pass
 
-    def update_cells(self, values, influence_cells):
+    def update_cells(self, values, influence_cells, color):
         for cell in influence_cells:
             if not cell.value:
-                for value in values:
-                    if value in cell.possible_values and len(cell.possible_values) > 1:
-                        cell.possible_values.remove(value)
-                        self.updates_done += 1
+                if len(cell.possible_values) > 1:
+                    for value in values:
+                        if value in cell.possible_values:
+                            cell.possible_values.remove(value)
+                            self.updates_done += 1
 
-            if len(cell.possible_values) == 1 and not cell.value:
-                value = cell.possible_values[0]
-                cell.show_digit(value, 'slate grey')
-                self.updates_done += 1
+                if len(cell.possible_values) == 1:
+                    value = cell.possible_values[0]
+                    cell.show_digit(value, color)
+                    self.updates_done += 1
+
 
 
 class Board(Frame):
@@ -168,7 +152,7 @@ class Board(Frame):
 
         # Create cells and organise them:
         self.draw_grid()
-        self.cells = []
+        self.cells = []  # Used as 'rows' in Solver
         self.columns = []
         self.squares = []
         self.create_cells()
@@ -240,12 +224,15 @@ class Board(Frame):
             self.columns.append(column)
 
     def create_squares(self):
+        square_id = 0
         for square_x in range(0, 9, 3):  # for 0, 3 and 6
             for square_y in range(0, 9, 3):
                 square = []
                 for row in range(square_x, square_x + 3):  # (0, 3), (3, 6) and (6, 9)
                     for col in range(square_y, square_y + 3):
                         cell = self.cells[row][col]
+                        cell.square_id = square_id
+                        square_id += 1
                         square.append(cell)
                 self.squares.append(square)
 
@@ -272,6 +259,7 @@ class Board(Frame):
                     self.undo_list.append(('value', previous_cell, previous_value))
 
                 self.current_cell.show_digit(int(key_char), 'black')
+                self.current_cell.possible_values = []
                 self.auto_switch()
 
     def change_checkbutton_label(self):
@@ -300,6 +288,7 @@ class Board(Frame):
 
                 self.canvas.delete(self.current_cell.unique_tag)
                 self.current_cell.value = None
+                self.current_cell.possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.auto_switch()
 
     def switch_cells_with_arrows(self, arrow_press):
@@ -440,6 +429,7 @@ class Cell:
         self.value = None
         self.possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.list_coord = list_coord
+        self.square_id = None
         self.canvas = board
         self.x1 = x1
         self.y1 = y1

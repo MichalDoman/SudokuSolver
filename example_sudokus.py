@@ -1,12 +1,22 @@
-TEST_BOARD = [[1, None, None, 3, None, None, 4, None, 9],
+TEST_BOARD = [[1, None, None, 3, None, None, 5, None, 9],
               [2, None, None, None, None, None, None, None, None],
               [None, None, None, None, None, None, None, None, None],
               [None, None, 4, None, None, None, None, None, None],
               [None, None, None, None, 4, None, None, None, None],
               [None, None, None, None, None, None, 4, None, None],
-              [None, None, None, None, None, 4, None, None, None],
+              [5, None, None, None, None, None, None, None, None],
               [None, None, None, None, None, None, None, 4, None],
               [None, None, None, 4, None, None, None, None, None]]
+
+EMPTY_BOARD = [[None, None, None, None, None, None, None, None, None],
+              [None, None, None, None, None, None, None, None, None],
+              [None, None, None, None, None, None, None, None, None],
+              [None, None, None, None, None, None, None, None, None],
+              [None, None, None, None, None, None, None, None, None],
+              [None, None, None, None, None, None, None, None, None],
+              [None, None, None, None, None, None, None, None, None],
+              [None, None, None, None, None, None, None, None, None],
+              [None, None, None, None, None, None, None, None, None]]
 
 MEDIUM_BOARD = [[None, 5, 4, 6, None, None, 8, 3, 7],
                 [6, 8, 2, 5, None, None, None, None, None],
@@ -57,3 +67,4 @@ def load_board(cells, board):
             cell.value = digit
             if digit is not None:
                 cell.show_digit(digit)
+                cell.possible_values = []
