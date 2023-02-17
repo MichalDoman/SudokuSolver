@@ -49,14 +49,15 @@ class SudokuSolver:
 
     def solve(self):
         # !!! if a cell is solved, it has to have only 1 value in cell.possible_values !!!
-        while not self.check_if_solved():
-            self.updates_done = 0
+        # while not self.check_if_solved():
+        self.updates_done = 0
 
-            self.check_singles()
+        self.check_singles()
+        self.check_hidden_singles()
 
-            if self.updates_done == 0:  # temporary
-                show_pop_up('Error', 'This puzzle is unsolvable!')
-                break
+        if self.updates_done == 0:  # temporary
+            show_pop_up('Error', 'This puzzle is unsolvable!')
+                # break
 
     def check_if_solved(self):
         for row in self.cells:
@@ -97,10 +98,30 @@ class SudokuSolver:
         pass
 
     def check_hidden_singles(self):
+        # Find hidden singles in rows:
         for row in self.cells:
+            modified_row = row.copy()
+            # Find all cells in a row that are still to be solved:
             for cell in row:
+                if cell.value:
+                    modified_row.remove(cell)
+
+            # Get empty cells excluding the one that is currently analysed:
+            for cell in modified_row:
+                other_cells = modified_row.copy()
+                other_cells.remove(cell)
+                # Check if any digit is single in the row:
                 for value in cell.possible_values:
-                    pass
+                    if len(cell.possible_values) > 1:
+                        is_single = True
+                        for other_cell in other_cells:
+                            if value in other_cell.possible_values:
+                                is_single = False
+                                break
+                        if is_single:
+                            cell.possible_values = [value]
+                            print(cell.possible_values)
+                            self.update_cells([value], row)
 
     def check_hidden_pairs(self):
         pass
@@ -110,9 +131,9 @@ class SudokuSolver:
 
     def update_cells(self, values, influence_cells):
         for cell in influence_cells:
-            for value in values:
-                if not cell.value:
-                    if value in cell.possible_values:
+            if not cell.value:
+                for value in values:
+                    if value in cell.possible_values and len(cell.possible_values) > 1:
                         cell.possible_values.remove(value)
                         self.updates_done += 1
 
@@ -169,7 +190,7 @@ class Board(Frame):
         self.create_squares()
         self.current_cell = self.cells[0][0]
         self.current_cell.highlight()
-        load_board(self.cells, MEDIUM_BOARD)  # used for testing
+        load_board(self.cells, TEST_BOARD)  # used for testing
 
         # Miscellaneous:
         self.undo_list = []  # stores every action for undo function
@@ -456,6 +477,9 @@ class Cell:
         self.value = None
         self.possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.canvas.delete(self.unique_tag)
+
+    def __str__(self):
+        return self.list_coord
 
 
 def show_pop_up(title, label_text, button_text='OK'):
