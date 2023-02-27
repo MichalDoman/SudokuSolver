@@ -33,12 +33,15 @@ class SudokuSolver:
         # !!! if a cell is solved, it has to have only 1 value in cell.possible_values !!!
         # while not self.check_if_solved():
         self.updates_done = 0
+        print(self.cluster_types[0][7][0].possible_values)
 
         self.check_singles()
         # self.check_hidden_singles()
-        # self.check_pairs()
-        # self.check_triples()
-        self.check_pointing_pairs()
+        # if self.updates_done == 0:
+            # self.check_pairs()
+            # self.check_triples()
+            # self.check_pointing_pairs()
+
         print(self.cluster_types[0][7][0].possible_values)
         # if self.updates_done == 0:  # temporary
         # show_pop_up('Error', 'This puzzle is unsolvable!')
@@ -125,11 +128,42 @@ class SudokuSolver:
         pass
 
     def check_pointing_pairs(self):
-        rows = self.cluster_types[0]
-        columns = self.cluster_types[1]
         squares = self.cluster_types[2]
+        for square in squares:
 
+            # Get remaining empty cells and values in a square:
+            empty_square_cells = square.copy()
+            possible_values = list(range(1, 10))
+            for cell in square:
+                if cell.value:
+                    possible_values.remove(cell.value)
+                    empty_square_cells.remove(cell)
 
+            # Check if any value can only be in two cells within a square:
+            for possible_value in possible_values:
+                decisive_cells = []
+                for empty_cell in empty_square_cells:
+                    if len(decisive_cells) > 2:
+                        break
+                    elif possible_value in empty_cell.possible_values:
+                        decisive_cells.append(empty_cell)
+
+                # Check if the values are in the same row or column:
+                if len(decisive_cells) == 2:
+                    # Rows:
+                    if decisive_cells[0].list_coord[0] == decisive_cells[1].list_coord[0]:
+                        row_id = decisive_cells[0].list_coord[0]
+                        other_row_cells = self.cluster_types[0][row_id].copy()
+                        for decisive_cell in decisive_cells:
+                            other_row_cells.remove(decisive_cell)
+                        self.update_cells(decisive_cells[0], other_row_cells, [possible_value])
+                    # Columns:
+                    elif decisive_cells[0].list_coord[1] == decisive_cells[1].list_coord[1]:
+                        column_id = decisive_cells[0].list_coord[1]
+                        other_column_cells = self.cluster_types[1][column_id].copy()
+                        for decisive_cell in decisive_cells:
+                            other_column_cells.remove(decisive_cell)
+                        self.update_cells(decisive_cells[0], other_column_cells, [possible_value])
 
     def check_pointing_triples(self):
         pass
