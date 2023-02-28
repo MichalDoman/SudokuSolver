@@ -12,9 +12,14 @@ class SudokuSolver:
                 for cell in cluster:
                     if cell.value:
                         if cell.value in values:
+                            print(f'cell: {cell.list_coord} with value: {cell.value}')
                             raise Exception('Board is invalid!')
                         else:
                             values.append(cell.value)
+                    else:
+                        if len(cell.possible_values) == 0:
+                            print(f'cell: {cell.list_coord} with possible values: {cell.possible_values}')
+                            raise Exception('Board is invalid!')s
 
     def initial_analysis(self):
         for row in self.cluster_types[0]:
@@ -42,10 +47,6 @@ class SudokuSolver:
         self.check_hidden_pairs()
 
         self.check_board_validity()
-        # if self.updates_done == 0:  # temporary
-        #     from main import show_pop_up
-        #     show_pop_up('Error', 'This puzzle is unsolvable!')
-        # break
 
     def check_singles(self):
         for clusters_type in self.cluster_types:
@@ -75,20 +76,30 @@ class SudokuSolver:
         for clusters_type in self.cluster_types:
             for cluster in clusters_type:
                 for cell in cluster:
+
+                    # Get a cell with only two possible values:
                     if len(cell.possible_values) == 2:
                         other_cells = cluster.copy()
                         other_cells.remove(cell)
+
+                        # Find another cell with only 2 possible values, within a cluster:
                         for second_cell in other_cells:
                             set_1 = set(cell.possible_values)
                             set_2 = set(second_cell.possible_values)
                             set_3 = None
+
+                            # Check if at least one value is alike within both cells:
                             if len(set_2) == 2 and set_1 & set_2:
                                 other_cells.remove(second_cell)
+
+                                # Find 3rd cell with 2 possible values
                                 for third_cell in other_cells:
                                     set_3 = set(third_cell.possible_values)
-                                    if len(set_3) == 2 and set_1 & set_3 and set_2 & set_3:
+                                    values = list(set_1 | set_2 | set_3)
+
+                                    # Check if 3rd cell has a paired value with 1st and 2nd cell:
+                                    if len(set_3) == 2 and set_1 & set_3 and set_2 & set_3 and len(values) == 3:
                                         other_cells.remove(third_cell)
-                                        values = list(set_1 | set_2 | set_3)
                                         self.update_cells(influence_cells=other_cells, values=values)
                                         break
                             if set_3:
@@ -145,7 +156,8 @@ class SudokuSolver:
                     # Get remaining empty cells (excluding decisive cells) and possible values:
                     if len(decisive_cells) == 2:
                         possible_values.remove(possible_value)
-                        other_possible_values = list(set(decisive_cells[0].possible_values) & set(decisive_cells[1].possible_values))
+                        other_possible_values = list(
+                            set(decisive_cells[0].possible_values) & set(decisive_cells[1].possible_values))
                         other_possible_values.remove(possible_value)
                         other_empty_cells = empty_cells.copy()
                         for decisive_cell in decisive_cells:
