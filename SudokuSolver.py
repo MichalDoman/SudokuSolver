@@ -33,18 +33,18 @@ class SudokuSolver:
         # !!! if a cell is solved, it has to have only 1 value in cell.possible_values !!!
         # while not self.check_if_solved():
         self.updates_done = 0
-        print(self.cluster_types[0][7][0].possible_values)
 
         self.check_singles()
-        # self.check_hidden_singles()
-        # if self.updates_done == 0:
-            # self.check_pairs()
-            # self.check_triples()
-            # self.check_pointing_pairs()
+        self.check_hidden_singles()
+        self.check_pairs()
+        self.check_triples()
+        self.check_pointing_pairs()
+        self.check_hidden_pairs()
 
-        print(self.cluster_types[0][7][0].possible_values)
+        self.check_board_validity()
         # if self.updates_done == 0:  # temporary
-        # show_pop_up('Error', 'This puzzle is unsolvable!')
+        #     from main import show_pop_up
+        #     show_pop_up('Error', 'This puzzle is unsolvable!')
         # break
 
     def check_singles(self):
@@ -68,7 +68,7 @@ class SudokuSolver:
                         for other_cell in other_cells:
                             if cell.possible_values == other_cell.possible_values:
                                 other_cells.remove(other_cell)
-                                self.update_cells(cell, other_cells, values)
+                                self.update_cells(influence_cells=other_cells, values=values)
                                 break
 
     def check_triples(self):
@@ -89,7 +89,7 @@ class SudokuSolver:
                                     if len(set_3) == 2 and set_1 & set_3 and set_2 & set_3:
                                         other_cells.remove(third_cell)
                                         values = list(set_1 | set_2 | set_3)
-                                        self.update_cells(cell, other_cells, values)
+                                        self.update_cells(influence_cells=other_cells, values=values)
                                         break
                             if set_3:
                                 break
@@ -122,7 +122,45 @@ class SudokuSolver:
                             self.update_cells(cell)
 
     def check_hidden_pairs(self):
-        pass
+        for clusters_type in self.cluster_types:
+            for cluster in clusters_type:
+
+                # Get empty cells and missing values in a cluster:
+                empty_cells = cluster.copy()
+                possible_values = list(range(1, 10))
+                for cell in cluster:
+                    if cell.value:
+                        empty_cells.remove(cell)
+                        possible_values.remove(cell.value)
+
+                # Get a value that can only be in two cells within a cluster:
+                for possible_value in possible_values:
+                    decisive_cells = []
+                    for empty_cell in empty_cells:
+                        if len(decisive_cells) > 2:
+                            break
+                        elif possible_value in empty_cell.possible_values:
+                            decisive_cells.append(empty_cell)
+
+                    # Get remaining empty cells (excluding decisive cells) and possible values:
+                    if len(decisive_cells) == 2:
+                        possible_values.remove(possible_value)
+                        other_possible_values = list(set(decisive_cells[0].possible_values) & set(decisive_cells[1].possible_values))
+                        other_possible_values.remove(possible_value)
+                        other_empty_cells = empty_cells.copy()
+                        for decisive_cell in decisive_cells:
+                            other_empty_cells.remove(decisive_cell)
+
+                        # Check if there is another unique value for decisive cells:
+                        for other_possible_value in other_possible_values:
+                            is_unique = True
+                            for other_empty_cell in other_empty_cells:
+                                if other_possible_value in other_empty_cell.possible_values:
+                                    is_unique = False
+                                    break
+                            if is_unique:
+                                possible_values.remove(other_possible_value)
+                                self.update_cells(influence_cells=decisive_cells, values=possible_values)
 
     def check_hidden_triples(self):
         pass
@@ -156,14 +194,14 @@ class SudokuSolver:
                         other_row_cells = self.cluster_types[0][row_id].copy()
                         for decisive_cell in decisive_cells:
                             other_row_cells.remove(decisive_cell)
-                        self.update_cells(decisive_cells[0], other_row_cells, [possible_value])
+                        self.update_cells(influence_cells=other_row_cells, values=[possible_value])
                     # Columns:
                     elif decisive_cells[0].list_coord[1] == decisive_cells[1].list_coord[1]:
                         column_id = decisive_cells[0].list_coord[1]
                         other_column_cells = self.cluster_types[1][column_id].copy()
                         for decisive_cell in decisive_cells:
                             other_column_cells.remove(decisive_cell)
-                        self.update_cells(decisive_cells[0], other_column_cells, [possible_value])
+                        self.update_cells(influence_cells=other_column_cells, values=[possible_value])
 
     def check_pointing_triples(self):
         pass
@@ -177,8 +215,8 @@ class SudokuSolver:
     def check_swordfish(self):
         pass
 
-    def update_cells(self, cell, influence_cells=None, values=None):
-        if cell.value:
+    def update_cells(self, cell=None, influence_cells=None, values=None):
+        if cell:
             value = cell.value
             row = self.cluster_types[0][cell.list_coord[0]]
             column = self.cluster_types[1][cell.list_coord[1]]

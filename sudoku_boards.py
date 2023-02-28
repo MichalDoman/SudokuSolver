@@ -8,15 +8,15 @@ TEST_BOARD = [[None, None, 9, None, 7, None, None, None, None],
                [None, 1, None, None, None, None, None, None, None],
                [None, None, None, None, None, None, 2, 8, 4]]
 
-TEST_BOARD_2 = [[3, 7, None, None, None, None, None, 9, 2],
-               [9, None, None, None, 7, None, None, None, None],
-               [None, None, None, 4, 2, None, None, None, 6],
-               [None, None, 1, None, 8, 4, 2, None, None],
-               [None, None, None, None, None, None, None, None, None],
-               [8, None, None, 6, None, None, None, 5, None],
-               [None, None, 6, None, None, 2, None, 1, None],
-               [None, None, None, None, None, None, None, 3, 9],
-               [None, 5, None, None, None, None, 4, None, None]]
+TEST_BOARD_2 = [[None, None, 9, None, 3, 2, None, None, None],
+               [None, None, None, 7, None, None, None, None, None],
+               [1, 6, 2, None, None, None, None, None, None],
+               [None, 1, None, None, 2, None, 5, 6, None],
+               [None, None, None, 9, None, None, None, None, None],
+               [None, 5, None, None, None, None, 1, None, 7],
+               [None, None, None, None, None, None, 4, None, 3],
+               [None, 2, 6, None, None, 9, None, None, None],
+               [None, None, 5, 8, 7, None, None, None, None]]
 
 EMPTY_BOARD = [[None, None, None, None, None, None, None, None, None],
                [None, None, None, None, None, None, None, None, None],
