@@ -19,7 +19,7 @@ class SudokuSolver:
                     else:
                         if len(cell.possible_values) == 0:
                             print(f'cell: {cell.list_coord} with possible values: {cell.possible_values}')
-                            raise Exception('Board is invalid!')s
+                            raise Exception('Board is invalid!')
 
     def initial_analysis(self):
         for row in self.cluster_types[0]:
@@ -41,10 +41,11 @@ class SudokuSolver:
 
         self.check_singles()
         self.check_hidden_singles()
-        self.check_pairs()
-        self.check_triples()
-        self.check_pointing_pairs()
-        self.check_hidden_pairs()
+        # self.check_pairs()
+        # self.check_triples()
+        # self.check_pointing_pairs()
+        # self.check_hidden_pairs()
+        self.check_x_wing()
 
         self.check_board_validity()
 
@@ -219,7 +220,63 @@ class SudokuSolver:
         pass
 
     def check_x_wing(self):
-        pass
+        for cluster_type in self.cluster_types[0:2]:
+            remaining_clusters = cluster_type.copy()
+            for cluster in cluster_type:
+                # Remove current cluster for the list:
+                temp_remaining_clusters = remaining_clusters.copy()
+                temp_remaining_clusters.remove(cluster)
+
+                # Find empty cells and missing values in a cluster:
+                empty_cells = cluster.copy()
+                possible_values = list(range(1, 10))
+                for cell in cluster:
+                    if cell.value:
+                        empty_cells.remove(cell)
+                        possible_values.remove(cell.value)
+
+                # Find a value that can only be in two cells in a cluster:
+                for possible_value in possible_values:
+                    counter = 0
+                    pair_1 = []
+                    for empty_cell in empty_cells:
+                        if possible_value in empty_cell.possible_values and counter < 3:
+                            counter += 1
+                            pair_1.append(empty_cell)
+
+                    if counter == 2:
+                        # Check for another cluster of the same type, in which the same number can only be in 2 cells:
+                        for remaining_cluster in temp_remaining_clusters:
+                            # Get only empty cells in remaining clusters:
+                            rc_empty_cells = remaining_cluster.copy()
+                            for rc_empty_cell in rc_empty_cells:
+                                if rc_empty_cell.value:
+                                    rc_empty_cells.remove(rc_empty_cell)
+
+                            rc_counter = 0
+                            pair_2 = []
+                            for rc_empty_cell in rc_empty_cells:
+                                if possible_value in rc_empty_cell.possible_values and rc_counter < 3:
+                                    rc_counter += 1
+                                    pair_2.append(rc_empty_cell)
+
+                            if rc_counter == 2:
+                                pair_1_cell_1 = pair_1[0].list_coord
+                                pair_1_cell_2 = pair_1[1].list_coord
+                                pair_2_cell_1 = pair_2[0].list_coord
+                                pair_2_cell_2 = pair_2[1].list_coord
+                                # X-wing in columns:
+                                if  pair_1_cell_1[0] == pair_2_cell_1[0] and pair_1_cell_2[0] == pair_2_cell_2[0]:
+                                    print('same columns:')
+                                    print(pair_1_cell_1, pair_1_cell_2)
+                                    print(pair_2_cell_1, pair_2_cell_2)
+                                # X-wing in rows:
+                                elif pair_1_cell_1[1] == pair_2_cell_1[1] and pair_1_cell_2[1] ==  pair_2_cell_2[1]:
+                                    print('same rows:')
+                                    print(pair_1_cell_1, pair_1_cell_2)
+                                    print(pair_2_cell_1, pair_2_cell_2)
+
+                remaining_clusters.remove(cluster)
 
     def check_y_wing(self):
         pass
