@@ -39,13 +39,14 @@ class SudokuSolver:
         # while not self.check_if_solved():
         self.updates_done = 0
 
-        self.check_singles()
-        self.check_hidden_singles()
-        self.check_pairs()
-        self.check_triples()
-        self.check_pointing_pairs()
-        self.check_hidden_pairs()
-        self.check_x_wing()
+        # self.check_singles()
+        # self.check_hidden_singles()
+        # self.check_pairs()
+        # self.check_triples()
+        # self.check_pointing_pairs()
+        # self.check_hidden_pairs()
+        # self.check_x_wing()
+        self.check_y_wing()
 
         self.check_board_validity()
 
@@ -292,7 +293,33 @@ class SudokuSolver:
                 remaining_clusters.remove(cluster)
 
     def check_y_wing(self):
-        pass
+        # Get all cells with only 2 possible values:
+        potential_pivots = []
+        for row in self.cluster_types[0]:
+            for cell in row:
+                if len(cell.possible_values) == 2:
+                    potential_pivots.append(cell)
+
+        # Find a pivot and pincers:
+        pivot = None
+        for potential_pivot in potential_pivots:
+            possible_values = potential_pivot.possible_values
+            potential_pincers = potential_pivots.copy()
+            potential_pincers.remove(potential_pivot)
+            for potential_pincer in potential_pincers:
+                # Check if cells have one digit in common:
+                same_square = potential_pincer.square_id == potential_pivot.square_id
+                if len(set(possible_values) | set(potential_pincer.possible_values)) == 3:
+                    cluster_id = None
+                    if potential_pincer.list_coord[0] == potential_pivot.list_coord[0]:
+                        cluster_id = 0
+                        print(potential_pincer.list_coord)
+                    elif potential_pincer.list_coord[1] == potential_pivot.list_coord[1]:
+                        cluster_id = 1
+                    if same_square:
+                        pass
+
+
 
     def check_swordfish(self):
         pass
