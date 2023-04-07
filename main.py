@@ -1,5 +1,6 @@
 from tkinter import *
 from SudokuSolver import SudokuSolver
+from tools import load_board
 from sudoku_boards import *
 
 SIDE = 100
@@ -7,7 +8,7 @@ MARGIN = 50
 WIDTH = 9 * SIDE + 2 * MARGIN
 HEIGHT = WIDTH
 
-BOARD_TO_LOAD = TEST_BOARD
+BOARD_TO_LOAD = EXPERT_BOARD
 
 
 class Board(Frame):

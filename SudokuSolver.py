@@ -41,10 +41,10 @@ class SudokuSolver:
 
         self.check_singles()
         self.check_hidden_singles()
-        # self.check_pairs()
-        # self.check_triples()
-        # self.check_pointing_pairs()
-        # self.check_hidden_pairs()
+        self.check_pairs()
+        self.check_triples()
+        self.check_pointing_pairs()
+        self.check_hidden_pairs()
         self.check_x_wing()
 
         self.check_board_validity()
@@ -223,7 +223,7 @@ class SudokuSolver:
         for cluster_type in self.cluster_types[0:2]:
             remaining_clusters = cluster_type.copy()
             for cluster in cluster_type:
-                # Remove current cluster for the list:
+                # Remove current cluster from the list:
                 temp_remaining_clusters = remaining_clusters.copy()
                 temp_remaining_clusters.remove(cluster)
 
@@ -247,34 +247,47 @@ class SudokuSolver:
                     if counter == 2:
                         # Check for another cluster of the same type, in which the same number can only be in 2 cells:
                         for remaining_cluster in temp_remaining_clusters:
-                            # Get only empty cells in remaining clusters:
-                            rc_empty_cells = remaining_cluster.copy()
-                            for rc_empty_cell in rc_empty_cells:
-                                if rc_empty_cell.value:
-                                    rc_empty_cells.remove(rc_empty_cell)
-
                             rc_counter = 0
                             pair_2 = []
-                            for rc_empty_cell in rc_empty_cells:
-                                if possible_value in rc_empty_cell.possible_values and rc_counter < 3:
+                            for rc_cell in remaining_cluster:
+                                if (len(rc_cell.possible_values) > 1) and (possible_value in rc_cell.possible_values) and (rc_counter < 3):
                                     rc_counter += 1
-                                    pair_2.append(rc_empty_cell)
+                                    pair_2.append(rc_cell)
 
                             if rc_counter == 2:
+                                # Check whether the found pairs of cells have corresponding coordinates:
                                 pair_1_cell_1 = pair_1[0].list_coord
                                 pair_1_cell_2 = pair_1[1].list_coord
                                 pair_2_cell_1 = pair_2[0].list_coord
                                 pair_2_cell_2 = pair_2[1].list_coord
-                                # X-wing in columns:
-                                if  pair_1_cell_1[0] == pair_2_cell_1[0] and pair_1_cell_2[0] == pair_2_cell_2[0]:
-                                    print('same columns:')
-                                    print(pair_1_cell_1, pair_1_cell_2)
-                                    print(pair_2_cell_1, pair_2_cell_2)
-                                # X-wing in rows:
-                                elif pair_1_cell_1[1] == pair_2_cell_1[1] and pair_1_cell_2[1] ==  pair_2_cell_2[1]:
-                                    print('same rows:')
-                                    print(pair_1_cell_1, pair_1_cell_2)
-                                    print(pair_2_cell_1, pair_2_cell_2)
+                                influence_clusters = None
+
+                                # Horizontal x-wings:
+                                if pair_1_cell_1[1] == pair_2_cell_1[1] and pair_1_cell_2[1] == pair_2_cell_2[1]:
+                                    influence_col_1 = self.cluster_types[1][pair_1_cell_1[1]]
+                                    influence_col_2 = self.cluster_types[1][pair_1_cell_2[1]]
+                                    influence_clusters= (influence_col_1, influence_col_2)
+
+                                # Vertical x-wing:
+                                elif  pair_1_cell_1[0] == pair_2_cell_1[0] and pair_1_cell_2[0] == pair_2_cell_2[0]:
+                                    influence_row_1 = self.cluster_types[0][pair_1_cell_1[0]]
+                                    influence_row_2 = self.cluster_types[0][pair_1_cell_2[0]]
+                                    influence_clusters = (influence_row_1, influence_row_2)
+
+                                if influence_clusters:
+                                    influence_cells = []
+                                    for influence_cluster in influence_clusters:
+                                        temp_cell_list = []
+                                        for ic_cell in influence_cluster:
+                                            if not ic_cell.value and possible_value in ic_cell.possible_values:
+                                                temp_cell_list.append(ic_cell)
+                                        influence_cells.extend(temp_cell_list)
+
+                                    if len(influence_cells) > 4:
+                                        pair_1.extend(pair_2)
+                                        for x_wing_cell in pair_1:
+                                            influence_cells.remove(x_wing_cell)
+                                        self.update_cells(influence_cells=influence_cells, values=[possible_value])
 
                 remaining_clusters.remove(cluster)
 

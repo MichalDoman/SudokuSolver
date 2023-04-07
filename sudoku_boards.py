@@ -1,4 +1,4 @@
-TEST_BOARD = [[None, None, 3, 8, None, None, 5, 1, None],
+X_WING_TEST_BOARD = [[None, None, 3, 8, None, None, 5, 1, None],
                [None, None, 8, 7, None, None, 9, 3, None],
                [1, None, None, 3, None, 5, 7, 2, 8],
                [None, None, None, 2, None, None, 8, 4, 9],
@@ -77,14 +77,3 @@ VERY_HARD_BOARD_2 = [[None, 4, None, None, 2, None, 3, None, None],
                      [2, None, None, None, None, None, None, 7, None],
                      [None, 7, None, 8, None, None, None, None, None],
                      [None, None, None, 6, None, 9, None, None, None]]
-
-
-def load_board(cells, board):
-    for row_nr in range(9):
-        for col_nr in range(9):
-            digit = board[row_nr][col_nr]
-            cell = cells[row_nr][col_nr]
-            cell.value = digit
-            if digit is not None:
-                cell.show_digit(digit)
-                cell.possible_values = []
