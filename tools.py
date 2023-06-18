@@ -7,3 +7,4 @@ def load_board(cells, board):
             if digit is not None:
                 cell.show_digit(digit)
                 cell.possible_values = []
+                

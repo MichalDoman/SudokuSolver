@@ -8,10 +8,16 @@ MARGIN = 50
 WIDTH = 9 * SIDE + 2 * MARGIN
 HEIGHT = WIDTH
 
-BOARD_TO_LOAD = Y_WING_TEST_BOARD
+BOARD_TO_LOAD = EXPERT_BOARD_2
 
 
 class Board(Frame):
+    """
+    This class is the main frame of the application which holds the whole content.
+    It contains functions which draw Sudoku board and all necessary components as well as
+    functions that allow the user to perform actions within the app. Sudoku board is divided
+    into 9x9 cells, and cells are segregated by clusters, which are rows, columns and 3x3 squares.
+    """
     def __init__(self, master):
         super().__init__(master)
         # Prepare canvas and widgets:

@@ -39,16 +39,37 @@ class SudokuSolver:
         # while not self.check_if_solved():
         self.updates_done = 0
 
-        # self.check_singles()
-        # self.check_hidden_singles()
-        # self.check_pairs()
-        # self.check_triples()
-        # self.check_pointing_pairs()
-        # self.check_hidden_pairs()
-        # self.check_x_wing()
-        self.check_y_wing()
+        self.check_singles()
+        self.check_hidden_singles()
+        self.check_pairs()
+        self.check_triples()
+        self.check_pointing_pairs()
+        self.check_hidden_pairs()
+        self.check_x_wing()
+        # self.check_y_wing()
 
         self.check_board_validity()
+
+    def update_cells(self, cell=None, influence_cells=None, values=None):
+        if cell:
+            value = cell.value
+            row = self.cluster_types[0][cell.list_coord[0]]
+            column = self.cluster_types[1][cell.list_coord[1]]
+            square = self.cluster_types[2][cell.square_id]
+            influence_clusters = [row, column, square]
+            for cluster in influence_clusters:
+                for cell in cluster:
+                    if not cell.value:
+                        if value in cell.possible_values:
+                            cell.possible_values.remove(value)
+                            self.updates_done += 1
+        else:
+            for value in values:
+                for influence_cell in influence_cells:
+                    if not influence_cell.value:
+                        if value in influence_cell.possible_values:
+                            influence_cell.possible_values.remove(value)
+                            self.updates_done += 1
 
     def check_singles(self):
         for clusters_type in self.cluster_types:
@@ -251,7 +272,8 @@ class SudokuSolver:
                             rc_counter = 0
                             pair_2 = []
                             for rc_cell in remaining_cluster:
-                                if (len(rc_cell.possible_values) > 1) and (possible_value in rc_cell.possible_values) and (rc_counter < 3):
+                                if (len(rc_cell.possible_values) > 1) and (
+                                        possible_value in rc_cell.possible_values) and (rc_counter < 3):
                                     rc_counter += 1
                                     pair_2.append(rc_cell)
 
@@ -267,10 +289,10 @@ class SudokuSolver:
                                 if pair_1_cell_1[1] == pair_2_cell_1[1] and pair_1_cell_2[1] == pair_2_cell_2[1]:
                                     influence_col_1 = self.cluster_types[1][pair_1_cell_1[1]]
                                     influence_col_2 = self.cluster_types[1][pair_1_cell_2[1]]
-                                    influence_clusters= (influence_col_1, influence_col_2)
+                                    influence_clusters = (influence_col_1, influence_col_2)
 
                                 # Vertical x-wing:
-                                elif  pair_1_cell_1[0] == pair_2_cell_1[0] and pair_1_cell_2[0] == pair_2_cell_2[0]:
+                                elif pair_1_cell_1[0] == pair_2_cell_1[0] and pair_1_cell_2[0] == pair_2_cell_2[0]:
                                     influence_row_1 = self.cluster_types[0][pair_1_cell_1[0]]
                                     influence_row_2 = self.cluster_types[0][pair_1_cell_2[0]]
                                     influence_clusters = (influence_row_1, influence_row_2)
@@ -301,46 +323,46 @@ class SudokuSolver:
                     potential_pivots.append(cell)
 
         # Find a pivot and pincers:
-        pivot = None
+        y_wing_cells = []  # First cell in the list is the pivot
         for potential_pivot in potential_pivots:
             possible_values = potential_pivot.possible_values
             potential_pincers = potential_pivots.copy()
             potential_pincers.remove(potential_pivot)
+            test_1_pincers = []
             for potential_pincer in potential_pincers:
-                # Check if cells have one digit in common:
+                # (test_1) Check if cells have one digit in common and if they influence each other:
                 same_square = potential_pincer.square_id == potential_pivot.square_id
                 if len(set(possible_values) | set(potential_pincer.possible_values)) == 3:
                     cluster_id = None
+                    # Check if a cell has the same row or column as a potential pivot:
                     if potential_pincer.list_coord[0] == potential_pivot.list_coord[0]:
                         cluster_id = 0
-                        print(potential_pincer.list_coord)
                     elif potential_pincer.list_coord[1] == potential_pivot.list_coord[1]:
                         cluster_id = 1
-                    if same_square:
-                        pass
+                    if same_square and not cluster_id:
+                        cluster_id = 2
+                    if cluster_id is not None:
+                        test_1_pincers.append((potential_pincer, cluster_id))
 
-
+            if len(test_1_pincers) >= 2:
+                # (test_2) Find actual pincers among potential ones:
+                for pincer_tuple in test_1_pincers:
+                    test_1_copy = test_1_pincers.copy()
+                    test_1_copy.remove(pincer_tuple)
+                    for pincer_tuple_2 in test_1_copy:
+                        if pincer_tuple[1] != pincer_tuple_2[1]:
+                            set_1 = set(potential_pivot.possible_values)
+                            set_2 = set(pincer_tuple[0].possible_values)
+                            set_3 = set(pincer_tuple_2[0].possible_values)
+                            y_wing_value_1 = set_1 & set_2
+                            y_wing_value_2 = set_1 & set_3
+                            if y_wing_value_1 != y_wing_value_2:
+                                y_wing_value_3 = set_2 & set_3
+                                print(y_wing_value_1)
+                                print(y_wing_value_2)
+                                print(y_wing_value_3)
+                                print(pincer_tuple[0].list_coord)
+                                print(pincer_tuple_2[0].list_coord)
 
     def check_swordfish(self):
         pass
-
-    def update_cells(self, cell=None, influence_cells=None, values=None):
-        if cell:
-            value = cell.value
-            row = self.cluster_types[0][cell.list_coord[0]]
-            column = self.cluster_types[1][cell.list_coord[1]]
-            square = self.cluster_types[2][cell.square_id]
-            influence_clusters = [row, column, square]
-            for cluster in influence_clusters:
-                for cell in cluster:
-                    if not cell.value:
-                        if value in cell.possible_values:
-                            cell.possible_values.remove(value)
-                            self.updates_done += 1
-        else:
-            for value in values:
-                for influence_cell in influence_cells:
-                    if not influence_cell.value:
-                        if value in influence_cell.possible_values:
-                            influence_cell.possible_values.remove(value)
-                            self.updates_done += 1
