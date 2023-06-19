@@ -392,11 +392,22 @@ class Board(Frame):
 
 
 class Cell:
+    """A class representing a single cell on the sudoku Board."""
     def __init__(self, board, list_coord, x1, y1, x2, y2):
+        """
+        Set cell's attributes.
+
+        :param board: instance of Board class.
+        :param list_coord: row and column indexes from Board's cells list (by rows).
+        :param x1: x coordinate of top-left edge within the app window
+        :param y1: y coordinate of top-left edge within the app window
+        :param x2: x coordinate of bottom-right left edge within the app window
+        :param y2: y coordinate of bottom-right edge within the app window
+        """
         self.value = None
         self.possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.list_coord = list_coord
-        self.square_id = None
+        self.square_id = None  # square index from cells list segregated by 3x3 squares
         self.canvas = board
         self.x1 = x1
         self.y1 = y1
@@ -405,11 +416,16 @@ class Cell:
         self.unique_tag = f'cell{self.x1}{self.y1}'  # Cannot be digit-only
 
     def highlight(self):
+        """Draw a rectangle on cell's borders to highlight it. Delete previous highlight."""
         self.canvas.delete('highlight')
         self.canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, tags='highlight', outline='RoyalBlue2',
                                      width=7)
 
     def show_digit(self, digit, color='black'):
+        """
+        Delete previous currently displayed value and draw a new text widget.
+        Deletion is based on a unique tags assigned to digits in every cell.
+        """
         self.canvas.delete(self.unique_tag)
         x = self.x1 + SIDE / 2
         y = self.y1 + SIDE / 2
@@ -417,6 +433,7 @@ class Cell:
         self.canvas.create_text(x, y, text=str(digit), tags=self.unique_tag, fill=color, font=('Script', 15, 'bold'))
 
     def reset(self):
+        """Reset cell's values to that of an empty cell"""
         self.value = None
         self.possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.canvas.delete(self.unique_tag)
