@@ -1,11 +1,22 @@
 class SudokuSolver:
+    """Class holding all methods for solving a Sudoku."""
     def __init__(self, rows, columns, squares):
+        """
+        Check board validity and prepare it for solving.
+        Create a list of differently segregated cells clusters.
+
+        :param rows: board cells segregated by rows.
+        :param columns: board cells segregated by columns.
+        :param squares: board cells segregated by 3x3 squares.
+        """
         self.cluster_types = [rows, columns, squares]
         self.check_board_validity()
         self.updates_done = 0  # Used to determine whether the solving algorithms are advancing
         self.initial_analysis()
 
     def check_board_validity(self):
+        """Raise 'Invalid Board' exception if a cell without value has no possible values
+        or there are two cells with same values within the same cluster."""
         for clusters_type in self.cluster_types:
             for cluster in clusters_type:
                 values = []
@@ -22,12 +33,14 @@ class SudokuSolver:
                             raise Exception('Board is invalid!')
 
     def initial_analysis(self):
+        """Subtract initial Sudoku digits from influenced cells' possible values"""
         for row in self.cluster_types[0]:
             for cell in row:
                 if cell.value:
                     self.update_cells(cell)
 
     def check_if_solved(self):
+        """Check whether a Sudoku has already all cells filled."""
         for row in self.cluster_types[0]:
             for cell in row:
                 if not cell.value:
@@ -35,6 +48,11 @@ class SudokuSolver:
         return True
 
     def solve(self):
+        """
+        A method that calls all solving functions until a Sudoku is solved, starting from the most basic.
+        If no updates are done moves on to more advanced methods.
+        With every loop of solving algorithms check board validity.
+        """
         # !!! if a cell is solved, it has to have only 1 value in cell.possible_values !!!
         # while not self.check_if_solved():
         self.updates_done = 0
@@ -51,6 +69,15 @@ class SudokuSolver:
         self.check_board_validity()
 
     def update_cells(self, cell=None, influence_cells=None, values=None):
+        """
+        A dynamic method used for every solving algorithm.
+        Collects information about influenced cells and values and updates cells' attributes accordingly.
+
+        :param cell: a cell with value which has to be removed from possible values of every cell
+        that is within influence clusters.
+        :param influence_cells: used if cell=None, list of cells that require updating.
+        :param values: used if cell=None, list of values to be subtracted from possible values of influenced_cells.
+        """
         if cell:
             value = cell.value
             row = self.cluster_types[0][cell.list_coord[0]]
