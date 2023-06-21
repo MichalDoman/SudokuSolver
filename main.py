@@ -1,6 +1,5 @@
 from tkinter import *
 from SudokuSolver import SudokuSolver
-from utils import load_board
 from sudoku_boards import *
 
 # Settings:
@@ -19,6 +18,7 @@ class Board(Frame):
     methods that allow the user to perform actions within the app. Sudoku board is divided
     into 9x9 cells, and cells are segregated by clusters, which are rows, columns and 3x3 squares.
     """
+
     def __init__(self, master):
         """
         Create canvas and add all necessary widgets to it.
@@ -73,7 +73,7 @@ class Board(Frame):
         self.create_squares()
         self.current_cell = self.cells[0][0]
         self.current_cell.highlight()
-        load_board(self.cells, BOARD_TO_LOAD)  # used for testing
+        self.load_board(BOARD_TO_LOAD)
 
         # Miscellaneous:
         self.undo_list = []  # stores every action for undo function
@@ -390,9 +390,24 @@ class Board(Frame):
             for cell in row:
                 cell.reset()
 
+    def load_board(self, board):
+        """
+        Load a prepared board from sudoku_boards.py.
+        :param board: board to be loaded.
+        """
+        for row_nr in range(9):
+            for col_nr in range(9):
+                digit = board[row_nr][col_nr]
+                cell = self.cells[row_nr][col_nr]
+                cell.value = digit
+                if digit is not None:
+                    cell.show_digit(digit)
+                    cell.possible_values = []
+
 
 class Cell:
     """A class representing a single cell on the sudoku Board."""
+
     def __init__(self, board, list_coord, x1, y1, x2, y2):
         """
         Set cell's attributes.

@@ -1,5 +1,6 @@
 class SudokuSolver:
     """Class holding all methods for solving a Sudoku."""
+
     def __init__(self, rows, columns, squares):
         """
         Check board validity and prepare it for solving.
@@ -68,14 +69,14 @@ class SudokuSolver:
 
         self.check_board_validity()
 
-    def update_cells(self, cell=None, influence_cells=None, values=None):
+    def update_cells(self, cell=None, influenced_cells=None, values=None):
         """
         A dynamic method used for every solving algorithm.
         Collects information about influenced cells and values and updates cells' attributes accordingly.
 
         :param cell: a cell with value which has to be removed from possible values of every cell
         that is within influence clusters.
-        :param influence_cells: used if cell=None, list of cells that require updating.
+        :param influenced_cells: used if cell=None, list of cells that require updating.
         :param values: used if cell=None, list of values to be subtracted from possible values of influenced_cells.
         """
         if cell:
@@ -92,13 +93,17 @@ class SudokuSolver:
                             self.updates_done += 1
         else:
             for value in values:
-                for influence_cell in influence_cells:
+                for influence_cell in influenced_cells:
                     if not influence_cell.value:
                         if value in influence_cell.possible_values:
                             influence_cell.possible_values.remove(value)
                             self.updates_done += 1
 
     def check_singles(self):
+        """
+        Check all cells by all clusters. If a cell can only have 1 value, update it.
+        Update all cells that are influenced by newly added digit.
+        """
         for clusters_type in self.cluster_types:
             for cluster in clusters_type:
                 for cell in cluster:
@@ -109,20 +114,29 @@ class SudokuSolver:
                             self.update_cells(cell)
 
     def check_pairs(self):
+        """
+        Check if two cells within a cluster has the same two possible values and only two.
+        If that is the case, update remaining cells within the cluster.
+        """
         for clusters_type in self.cluster_types:
             for cluster in clusters_type:
                 for cell in cluster:
                     values = cell.possible_values
-                    if len(cell.possible_values) == 2:
+                    if len(values) == 2:
                         other_cells = cluster.copy()
                         other_cells.remove(cell)
                         for other_cell in other_cells:
-                            if cell.possible_values == other_cell.possible_values:
+                            if values == other_cell.possible_values:
                                 other_cells.remove(other_cell)
-                                self.update_cells(influence_cells=other_cells, values=values)
+                                self.update_cells(influenced_cells=other_cells, values=values)
                                 break
 
     def check_triples(self):
+        """
+        Check if 3 cells within a cluster has a triple. That is, 3 pairs of 3 different values e.g.
+        (1, 2), (2, 3) and (3, 1). If that is the case, remove those values from possible values of
+        other cells within the cluster.
+        """
         for clusters_type in self.cluster_types:
             for cluster in clusters_type:
                 for cell in cluster:
@@ -150,17 +164,21 @@ class SudokuSolver:
                                     # Check if 3rd cell has a paired value with 1st and 2nd cell:
                                     if len(set_3) == 2 and set_1 & set_3 and set_2 & set_3 and len(values) == 3:
                                         other_cells.remove(third_cell)
-                                        self.update_cells(influence_cells=other_cells, values=values)
+                                        self.update_cells(influenced_cells=other_cells, values=values)
                                         break
                             if set_3:
                                 break
 
     def check_hidden_singles(self):
+        """
+        Find a cell within a cluster that has a unique value in possible values, that cannot occur
+        in other cells within the same cluster. If so, change that cell's possible values to a list
+        of that single value, and update all influenced cells.
+        """
         for clusters_type in self.cluster_types:
             for cluster in clusters_type:
-                empty_cluster_cells = cluster.copy()
-
                 # Find all cells in a cluster that are still to be solved:
+                empty_cluster_cells = cluster.copy()
                 for cell in cluster:
                     if cell.value:
                         empty_cluster_cells.remove(cell)
@@ -183,6 +201,10 @@ class SudokuSolver:
                             self.update_cells(cell)
 
     def check_hidden_pairs(self):
+        """
+        Find a pair of cells in a cluster, that can have a unique pair of values which cannot occur
+        in other cells within the same cluster. If so,
+        """
         for clusters_type in self.cluster_types:
             for cluster in clusters_type:
 
@@ -200,10 +222,10 @@ class SudokuSolver:
                     for empty_cell in empty_cells:
                         if len(decisive_cells) > 2:
                             break
-                        elif possible_value in empty_cell.possible_values:
+                        if possible_value in empty_cell.possible_values:
                             decisive_cells.append(empty_cell)
 
-                    # Get remaining empty cells (excluding decisive cells) and possible values:
+                    # Get remaining empty cells (excluding decisive cells) and remaining possible values:
                     if len(decisive_cells) == 2:
                         possible_values.remove(possible_value)
                         other_possible_values = list(
@@ -222,7 +244,9 @@ class SudokuSolver:
                                     break
                             if is_unique:
                                 possible_values.remove(other_possible_value)
-                                self.update_cells(influence_cells=decisive_cells, values=possible_values)
+                                # for decisive_cell in decisive_cells:
+                                #     decisive_cell.possible_values = possible_values
+                                self.update_cells(influenced_cells=decisive_cells, values=possible_values)
 
     def check_hidden_triples(self):
         pass
@@ -256,14 +280,14 @@ class SudokuSolver:
                         other_row_cells = self.cluster_types[0][row_id].copy()
                         for decisive_cell in decisive_cells:
                             other_row_cells.remove(decisive_cell)
-                        self.update_cells(influence_cells=other_row_cells, values=[possible_value])
+                        self.update_cells(influenced_cells=other_row_cells, values=[possible_value])
                     # Columns:
                     elif decisive_cells[0].list_coord[1] == decisive_cells[1].list_coord[1]:
                         column_id = decisive_cells[0].list_coord[1]
                         other_column_cells = self.cluster_types[1][column_id].copy()
                         for decisive_cell in decisive_cells:
                             other_column_cells.remove(decisive_cell)
-                        self.update_cells(influence_cells=other_column_cells, values=[possible_value])
+                        self.update_cells(influenced_cells=other_column_cells, values=[possible_value])
 
     def check_pointing_triples(self):
         pass
@@ -337,7 +361,7 @@ class SudokuSolver:
                                         pair_1.extend(pair_2)
                                         for x_wing_cell in pair_1:
                                             influence_cells.remove(x_wing_cell)
-                                        self.update_cells(influence_cells=influence_cells, values=[possible_value])
+                                        self.update_cells(influenced_cells=influence_cells, values=[possible_value])
 
                 remaining_clusters.remove(cluster)
 
